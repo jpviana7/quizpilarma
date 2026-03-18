@@ -1,0 +1,530 @@
+import React, { useState, useEffect } from 'react';
+import { Settings, CheckCircle, XCircle, Award, RotateCcw, PlayCircle, Wrench, Users, Plus, Trash2, Trophy, Medal, ChevronRight, List, Timer } from 'lucide-react';
+
+// Base de dados inicial de perguntas (20 perguntas, todas com 3 opções)
+const defaultQuestions = [
+  { id: 1, text: 'O que significa a sigla MA?', options: [{ text: 'Manutenção Autónoma', isCorrect: true }, { text: 'Manutenção Anual', isCorrect: false }, { text: 'Melhoria Avançada', isCorrect: false }] },
+  { id: 2, text: 'Qual é o principal objetivo da MA?', options: [{ text: 'Capacitar operadores para cuidar do equipamento', isCorrect: true }, { text: 'Reduzir o número de operadores', isCorrect: false }, { text: 'Comprar máquinas novas', isCorrect: false }] },
+  { id: 3, text: 'O que significa GA?', options: [{ text: 'Grupo Autónomo', isCorrect: true }, { text: 'Gestão Avançada', isCorrect: false }, { text: 'Grupo de Apoio', isCorrect: false }] },
+  { id: 4, text: 'Qual é o Passo 1 da MA?', options: [{ text: 'Limpeza Inicial', isCorrect: true }, { text: 'Padronização', isCorrect: false }, { text: 'Inspeção Geral', isCorrect: false }] },
+  { id: 5, text: 'Na MA, costuma-se dizer que a Limpeza é uma forma de...', options: [{ text: 'Inspeção', isCorrect: true }, { text: 'Punição', isCorrect: false }, { text: 'Perda de tempo', isCorrect: false }] },
+  { id: 6, text: 'Para que serve uma LPP (Lição Ponto a Ponto)?', options: [{ text: 'Treinar a equipa rapidamente e de forma visual', isCorrect: true }, { text: 'Solicitar peças ao armazém', isCorrect: false }, { text: 'Punir erros operacionais', isCorrect: false }] },
+  { id: 7, text: 'A Etiqueta Azul (ou Branca) indica uma anomalia que:', options: [{ text: 'O próprio operador pode e deve resolver', isCorrect: true }, { text: 'Apenas a Manutenção pode resolver', isCorrect: false }, { text: 'A máquina deve ser parada imediatamente', isCorrect: false }] },
+  { id: 8, text: 'O que é a Deterioração Forçada?', options: [{ text: 'Desgaste acelerado por falta de cuidados básicos', isCorrect: true }, { text: 'Desgaste natural da máquina com o tempo', isCorrect: false }, { text: 'Teste de qualidade destrutivo', isCorrect: false }] },
+  { id: 9, text: 'A Etiqueta Vermelha indica uma anomalia que:', options: [{ text: 'Requer a intervenção da equipa de Manutenção', isCorrect: true }, { text: 'O operador resolve sozinho', isCorrect: false }, { text: 'Não tem solução e deve ser ignorada', isCorrect: false }] },
+  { id: 10, text: 'O que deve fazer ao encontrar uma anomalia que não consegue resolver?', options: [{ text: 'Colocar uma Etiqueta Vermelha e registar', isCorrect: true }, { text: 'Ignorar e continuar a trabalhar', isCorrect: false }, { text: 'Tentar consertar mesmo sem conhecimento', isCorrect: false }] },
+  { id: 11, text: 'No 5S, o Seiri (Utilização/Seleção) significa:', options: [{ text: 'Separar o necessário do desnecessário', isCorrect: true }, { text: 'Limpar tudo brilhantemente', isCorrect: false }, { text: 'Criar padrões de trabalho', isCorrect: false }] },
+  { id: 12, text: 'No 5S, o Seiso (Limpeza) significa:', options: [{ text: 'Eliminar a sujidade inspecionando o equipamento', isCorrect: true }, { text: 'Apenas varrer o chão da fábrica', isCorrect: false }, { text: 'Guardar ferramentas na caixa', isCorrect: false }] },
+  { id: 13, text: 'A sigla TPM significa:', options: [{ text: 'Total Productive Maintenance', isCorrect: true }, { text: 'Total Performance Management', isCorrect: false }, { text: 'Time Per Machine', isCorrect: false }] },
+  { id: 14, text: 'Qual o principal benefício da LPP?', options: [{ text: 'Ensina um ponto específico de forma rápida e visual', isCorrect: true }, { text: 'Substitui manuais complexos de 100 páginas', isCorrect: false }, { text: 'Serve para registar as pausas da equipa', isCorrect: false }] },
+  { id: 15, text: 'A lubrificação correta das máquinas:', options: [{ text: 'Evita o desgaste acelerado e o aquecimento', isCorrect: true }, { text: 'Aumenta o ruído do equipamento', isCorrect: false }, { text: 'Desperdiça óleo e deve ser evitada', isCorrect: false }] },
+  { id: 16, text: 'Quais os sentidos usados na inspeção autónoma?', options: [{ text: 'Visão, audição, olfato e tato', isCorrect: true }, { text: 'Apenas a visão', isCorrect: false }, { text: 'Nenhum, o sistema avisa na tela', isCorrect: false }] },
+  { id: 17, text: 'Qual é o Passo 2 da Manutenção Autónoma?', options: [{ text: 'Eliminar fontes de sujidade e locais de difícil acesso', isCorrect: true }, { text: 'Limpeza Inicial do equipamento', isCorrect: false }, { text: 'Inspeção Geral com check-list', isCorrect: false }] },
+  { id: 18, text: 'Para que serve o Quadro do Grupo Autónomo (GA)?', options: [{ text: 'Gestão visual, acompanhamento de indicadores e comunicação', isCorrect: true }, { text: 'Para a diretoria avaliar salários', isCorrect: false }, { text: 'Apenas para enfeitar a área de trabalho', isCorrect: false }] },
+  { id: 19, text: 'Como deve ser uma boa reunião de GA?', options: [{ text: 'Curta, focada em anomalias e ações de melhoria', isCorrect: true }, { text: 'Longa, para discutir todos os problemas do mundo', isCorrect: false }, { text: 'Apenas o líder do grupo pode falar', isCorrect: false }] },
+  { id: 20, text: 'O que significa "Restaurar as Condições Básicas"?', options: [{ text: 'Limpar, reapertar e lubrificar', isCorrect: true }, { text: 'Comprar peças novas de última geração', isCorrect: false }, { text: 'Chamar a manutenção para fazer uma revisão anual', isCorrect: false }] },
+];
+
+// Função utilitária para baralhar arrays
+function shuffleArray(array) {
+  const newArr = [...array];
+  for (let i = newArr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+  }
+  return newArr;
+}
+
+const TOTAL_ROUNDS = 5; // Cada jogador responde a 5 perguntas
+const MAX_TIME_MS = 15000; // 15 segundos por pergunta em milissegundos
+
+export default function AutonomousMaintenanceMultiplayerQuiz() {
+  // Estados Globais
+  const [view, setView] = useState('menu'); // 'menu', 'setup', 'play', 'intermission', 'podium', 'manage'
+  const [questions, setQuestions] = useState(defaultQuestions);
+  
+  // Estados do Jogo
+  const [playerCount, setPlayerCount] = useState(1);
+  const [players, setPlayers] = useState([]);
+  const [currentRound, setCurrentRound] = useState(1);
+  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
+  const [usedQuestionIds, setUsedQuestionIds] = useState([]);
+  const [currentQuestion, setCurrentQuestion] = useState(null);
+  
+  // Estados da Jogada
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [isAnswering, setIsAnswering] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(MAX_TIME_MS);
+  const [earnedPoints, setEarnedPoints] = useState(null);
+
+  // Estados de Gestão de Perguntas
+  const [newQuestionText, setNewQuestionText] = useState('');
+  const [newCorrectOption, setNewCorrectOption] = useState('');
+  const [newIncorrect1, setNewIncorrect1] = useState('');
+  const [newIncorrect2, setNewIncorrect2] = useState('');
+
+  // Carregar e guardar perguntas no LocalStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('ma_quiz_questions');
+    if (saved) {
+      try { setQuestions(JSON.parse(saved)); } catch (e) { console.error(e); }
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('ma_quiz_questions', JSON.stringify(questions));
+  }, [questions]);
+
+  // Timer regressivo
+  useEffect(() => {
+    let timer;
+    if (view === 'play' && !isAnswering && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prev) => Math.max(0, prev - 100));
+      }, 100);
+    } else if (timeLeft === 0 && !isAnswering && view === 'play') {
+      handleTimeOut();
+    }
+    return () => clearInterval(timer);
+  }, [view, isAnswering, timeLeft]);
+
+  // -------------- LÓGICA DO JOGO --------------
+
+  const handleStartSetup = () => {
+    setView('setup');
+    setPlayers(Array(playerCount).fill({ name: '', score: 0 }));
+  };
+
+  const updatePlayerName = (index, name) => {
+    const newPlayers = [...players];
+    newPlayers[index] = { ...newPlayers[index], name: name };
+    setPlayers(newPlayers);
+  };
+
+  const pickRandomQuestion = (usedIds) => {
+    const available = questions.filter(q => !usedIds.includes(q.id));
+    if (available.length === 0) return null;
+    const randomIndex = Math.floor(Math.random() * available.length);
+    const selected = available[randomIndex];
+    // Baralha as opções para a resposta certa não estar sempre no mesmo sítio
+    return { ...selected, options: shuffleArray(selected.options) };
+  };
+
+  const startGame = () => {
+    // Valida se os nomes estão preenchidos
+    const finalPlayers = players.map((p, i) => ({
+      ...p,
+      name: p.name.trim() === '' ? `Jogador ${i + 1}` : p.name
+    }));
+    setPlayers(finalPlayers);
+    setUsedQuestionIds([]);
+    setCurrentRound(1);
+    setCurrentPlayerIndex(0);
+    
+    const firstQ = pickRandomQuestion([]);
+    if (firstQ) {
+      setCurrentQuestion(firstQ);
+      setUsedQuestionIds([firstQ.id]);
+      setTimeLeft(MAX_TIME_MS);
+      setEarnedPoints(null);
+      setView('intermission');
+    } else {
+      alert("Não há perguntas suficientes!");
+    }
+  };
+
+  const handleAnswerOptionClick = (isCorrect, index) => {
+    if (isAnswering) return;
+    setIsAnswering(true);
+    setSelectedOption(index);
+
+    if (isCorrect) {
+      // Pontuação baseada no tempo: Base de 200 + Bónus de tempo de até 800
+      const timeBonus = Math.round((timeLeft / MAX_TIME_MS) * 800);
+      const points = 200 + timeBonus;
+      setEarnedPoints(points);
+
+      const newPlayers = [...players];
+      newPlayers[currentPlayerIndex].score += points;
+      setPlayers(newPlayers);
+    } else {
+      setEarnedPoints(0);
+    }
+
+    setTimeout(() => {
+      handleNextTurn();
+    }, 2000); // Aguarda 2 segundos para ver os pontos e avançar
+  };
+
+  const handleTimeOut = () => {
+    setIsAnswering(true);
+    setSelectedOption(-1); // Indica que o tempo acabou sem escolha
+    setEarnedPoints(0);
+
+    setTimeout(() => {
+      handleNextTurn();
+    }, 2000);
+  };
+
+  const handleNextTurn = () => {
+    setIsAnswering(false);
+    setSelectedOption(null);
+    setEarnedPoints(null);
+
+    const nextPlayerIndex = currentPlayerIndex + 1;
+    let nextRound = currentRound;
+    let nextPlayer = nextPlayerIndex;
+
+    // Se todos os jogadores jogaram esta ronda, avança a ronda e volta ao primeiro
+    if (nextPlayerIndex >= players.length) {
+      nextPlayer = 0;
+      nextRound = currentRound + 1;
+    }
+
+    // Se as rondas acabaram
+    if (nextRound > TOTAL_ROUNDS) {
+      setView('podium');
+      return;
+    }
+
+    const nextQ = pickRandomQuestion(usedQuestionIds);
+    if (!nextQ) {
+       // Se acabarem as perguntas antes das rondas
+       setView('podium');
+       return;
+    }
+
+    setCurrentRound(nextRound);
+    setCurrentPlayerIndex(nextPlayer);
+    setCurrentQuestion(nextQ);
+    setUsedQuestionIds(prev => [...prev, nextQ.id]);
+    setTimeLeft(MAX_TIME_MS); // Reseta o tempo em caso de passar direto (failsafe)
+    setView('intermission');
+  };
+
+  const resetGame = () => {
+    setView('menu');
+  };
+
+  // -------------- LÓGICA DE GESTÃO --------------
+
+  const handleAddQuestion = (e) => {
+    e.preventDefault();
+    if (!newQuestionText || !newCorrectOption || !newIncorrect1 || !newIncorrect2) {
+      alert("Preencha todos os campos!");
+      return;
+    }
+    const newQ = {
+      id: Date.now(),
+      text: newQuestionText,
+      options: [
+        { text: newCorrectOption, isCorrect: true },
+        { text: newIncorrect1, isCorrect: false },
+        { text: newIncorrect2, isCorrect: false },
+      ]
+    };
+    setQuestions([newQ, ...questions]);
+    setNewQuestionText('');
+    setNewCorrectOption('');
+    setNewIncorrect1('');
+    setNewIncorrect2('');
+  };
+
+  const handleDeleteQuestion = (id) => {
+    setQuestions(questions.filter(q => q.id !== id));
+  };
+
+  // -------------- RENDERIZAÇÃO DE VISTAS --------------
+
+  if (view === 'menu') {
+    return (
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 font-sans">
+        <div className="bg-white max-w-xl w-full rounded-2xl shadow-xl p-8 text-center border-t-8 border-blue-600">
+          <div className="flex justify-center mb-6">
+            <div className="bg-blue-100 p-4 rounded-full">
+              <Settings className="w-16 h-16 text-blue-600" />
+            </div>
+          </div>
+          <h1 className="text-4xl font-bold text-slate-800 mb-2">Quiz Competitivo: MA</h1>
+          <p className="text-slate-600 mb-8">Treine a sua equipa com o quiz de Manutenção Autónoma.</p>
+          
+          <div className="space-y-4">
+            <button onClick={() => setView('setup')} className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-xl transition-all transform hover:scale-105 shadow-lg">
+              <PlayCircle className="w-6 h-6" /> Novo Jogo
+            </button>
+            <button onClick={() => setView('manage')} className="w-full flex items-center justify-center gap-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-4 px-8 rounded-xl transition-all">
+              <List className="w-6 h-6" /> Gerir Perguntas ({questions.length})
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'setup') {
+    return (
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 font-sans">
+        <div className="bg-white max-w-xl w-full rounded-2xl shadow-xl p-8 border-t-8 border-blue-600">
+          <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+            <Users className="text-blue-600" /> Configuração da Partida
+          </h2>
+          
+          <div className="mb-6">
+            <label className="block text-sm font-bold text-slate-700 mb-2">Quantos jogadores? (Máx 3)</label>
+            <div className="flex gap-4">
+              {[1, 2, 3].map(num => (
+                <button
+                  key={num}
+                  onClick={() => { setPlayerCount(num); setPlayers(Array(num).fill({ name: '', score: 0 })); }}
+                  className={`flex-1 py-3 rounded-lg font-bold border-2 transition-colors ${playerCount === num ? 'bg-blue-100 border-blue-500 text-blue-700' : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300'}`}
+                >
+                  {num} {num === 1 ? 'Jogador' : 'Jogadores'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4 mb-8">
+            {Array.from({ length: playerCount }).map((_, i) => (
+              <div key={i}>
+                <label className="block text-sm font-semibold text-slate-600 mb-1">Nome do Jogador {i + 1}</label>
+                <input
+                  type="text"
+                  placeholder={`Jogador ${i + 1}`}
+                  value={players[i]?.name || ''}
+                  onChange={(e) => updatePlayerName(i, e.target.value)}
+                  className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="flex gap-4">
+            <button onClick={() => setView('menu')} className="flex-1 py-4 font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">Voltar</button>
+            <button onClick={startGame} className="flex-2 w-full py-4 font-bold text-white bg-green-500 hover:bg-green-600 rounded-xl transition-colors shadow-lg">Começar Partida</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'intermission') {
+    const currentPlayer = players[currentPlayerIndex];
+    return (
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 font-sans text-center">
+        <div className="bg-white max-w-lg w-full rounded-2xl shadow-xl p-10 border-t-8 border-yellow-400">
+          <div className="mb-2 text-sm font-bold text-slate-400 uppercase tracking-widest">Ronda {currentRound} de {TOTAL_ROUNDS}</div>
+          <h2 className="text-3xl font-bold text-slate-800 mb-4">Passe o dispositivo</h2>
+          <p className="text-xl text-slate-600 mb-8">Agora é o turno de:<br/><span className="text-4xl font-black text-blue-600 block mt-2">{currentPlayer.name}</span></p>
+          <button onClick={() => { setTimeLeft(MAX_TIME_MS); setView('play'); }} className="w-full flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-full transition-transform transform hover:scale-105 shadow-xl text-lg">
+            Estou Pronto <ChevronRight className="w-6 h-6" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'play') {
+    const currentPlayer = players[currentPlayerIndex];
+    const progress = ((currentRound - 1) / TOTAL_ROUNDS) * 100;
+    
+    // Cálculos do timer visual
+    const timePercentage = (timeLeft / MAX_TIME_MS) * 100;
+    let timerColor = 'bg-green-500';
+    if (timePercentage < 50) timerColor = 'bg-yellow-500';
+    if (timePercentage < 20) timerColor = 'bg-red-500';
+
+    return (
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 font-sans">
+        <div className="bg-white max-w-3xl w-full rounded-2xl shadow-xl overflow-hidden border-t-8 border-blue-600 flex flex-col">
+          
+          {/* Barra de Progresso Geral */}
+          <div className="bg-slate-200 h-2 w-full"><div className="bg-blue-600 h-2 transition-all duration-500" style={{ width: `${progress}%` }}></div></div>
+
+          {/* Barra de Tempo (Timer) */}
+          <div className="bg-slate-100 h-3 w-full border-b border-slate-200">
+            <div className={`${timerColor} h-3 transition-all duration-100 ease-linear`} style={{ width: `${timePercentage}%` }}></div>
+          </div>
+
+          <div className="p-8">
+            <div className="flex justify-between items-center mb-6 border-b pb-4">
+              <div>
+                <span className="text-sm font-bold text-slate-500 uppercase block">A jogar agora:</span>
+                <span className="text-xl font-black text-blue-600">{currentPlayer.name}</span>
+              </div>
+              
+              <div className="flex items-center gap-6">
+                <div className="flex flex-col items-center">
+                  <span className="text-sm font-bold text-slate-500 uppercase flex items-center gap-1"><Timer className="w-4 h-4"/> Tempo</span>
+                  <span className={`text-2xl font-black ${timeLeft <= 3000 ? 'text-red-500 animate-pulse' : 'text-slate-800'}`}>
+                    {Math.ceil(timeLeft / 1000)}s
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-sm font-bold text-slate-500 uppercase block">Pontuação</span>
+                  <span className="text-2xl font-black text-slate-800">{currentPlayer.score}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Mensagem de Tempo Esgotado */}
+            {isAnswering && selectedOption === -1 && (
+              <div className="mb-4 p-3 bg-red-100 text-red-700 border border-red-300 rounded-lg text-center font-bold animate-pulse">
+                O tempo esgotou!
+              </div>
+            )}
+
+            <h2 className="text-2xl font-bold text-slate-800 mb-8 leading-tight">{currentQuestion.text}</h2>
+
+            <div className="space-y-3 relative">
+              
+              {/* Feedback de Pontos Ganhos */}
+              {isAnswering && earnedPoints !== null && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+                  <div className={`text-5xl font-black px-6 py-4 rounded-2xl shadow-2xl bg-white border-4 ${earnedPoints > 0 ? 'text-green-500 border-green-500' : 'text-red-500 border-red-500'} transform transition-transform animate-bounce`}>
+                    {earnedPoints > 0 ? `+${earnedPoints}` : '0'} pts
+                  </div>
+                </div>
+              )}
+
+              {currentQuestion.options.map((option, index) => {
+                let buttonStyle = "bg-white border-slate-300 text-slate-700 hover:border-blue-500 hover:bg-blue-50";
+                let icon = null;
+
+                if (isAnswering) {
+                  if (option.isCorrect) {
+                    buttonStyle = "bg-green-100 border-green-500 text-green-800 font-medium";
+                    icon = <CheckCircle className="w-6 h-6 text-green-600" />;
+                  } else if (index === selectedOption) {
+                    buttonStyle = "bg-red-100 border-red-500 text-red-800 font-medium";
+                    icon = <XCircle className="w-6 h-6 text-red-600" />;
+                  } else {
+                    buttonStyle = "bg-slate-50 border-slate-200 text-slate-400 opacity-50";
+                  }
+                }
+
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleAnswerOptionClick(option.isCorrect, index)}
+                    disabled={isAnswering}
+                    className={`w-full text-left p-4 rounded-xl border-2 transition-all flex justify-between items-center ${buttonStyle}`}
+                  >
+                    <span className="text-lg">{option.text}</span>
+                    {icon}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'podium') {
+    // Ordenar jogadores pela pontuação
+    const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+    
+    return (
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 font-sans text-center">
+        <div className="bg-white max-w-3xl w-full rounded-2xl shadow-xl p-8 border-t-8 border-yellow-500">
+          <Trophy className="w-20 h-20 text-yellow-500 mx-auto mb-4" />
+          <h1 className="text-4xl font-black text-slate-800 mb-8">Pódio Final</h1>
+          
+          <div className="flex flex-col gap-4 mb-10 max-w-md mx-auto">
+            {sortedPlayers.map((player, index) => {
+              let medalColor = "text-slate-400";
+              let bgColor = "bg-slate-50";
+              let borderColor = "border-slate-200";
+              if (index === 0) { medalColor = "text-yellow-500"; bgColor = "bg-yellow-50"; borderColor = "border-yellow-400"; }
+              else if (index === 1) { medalColor = "text-slate-400"; bgColor = "bg-slate-100"; borderColor = "border-slate-300"; }
+              else if (index === 2) { medalColor = "text-amber-600"; bgColor = "bg-orange-50"; borderColor = "border-orange-300"; }
+
+              return (
+                <div key={index} className={`flex items-center justify-between p-4 rounded-xl border-2 ${bgColor} ${borderColor}`}>
+                  <div className="flex items-center gap-4">
+                    <span className={`font-black text-2xl ${medalColor}`}>{index + 1}º</span>
+                    <span className="text-xl font-bold text-slate-800">{player.name}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-2xl font-black text-slate-800">{player.score}</span>
+                    <span className="text-sm font-semibold text-slate-500 ml-1">pts</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <button onClick={resetGame} className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg">
+            <RotateCcw className="w-6 h-6" /> Novo Jogo
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'manage') {
+    return (
+      <div className="min-h-screen bg-slate-100 p-4 sm:p-8 font-sans">
+        <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border-t-8 border-slate-800">
+          <div className="p-6 bg-slate-50 border-b flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2"><Settings className="text-slate-600"/> Gestão de Perguntas</h2>
+            <button onClick={() => setView('menu')} className="text-blue-600 font-bold hover:underline">Voltar ao Menu</button>
+          </div>
+
+          <div className="p-6 grid md:grid-cols-3 gap-8">
+            {/* Formulário de Adição */}
+            <div className="md:col-span-1 bg-slate-50 p-4 rounded-xl border">
+              <h3 className="text-lg font-bold text-slate-700 mb-4 flex items-center gap-2"><Plus/> Adicionar Pergunta</h3>
+              <form onSubmit={handleAddQuestion} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1">Pergunta</label>
+                  <textarea value={newQuestionText} onChange={e=>setNewQuestionText(e.target.value)} required className="w-full p-2 border rounded-md text-sm" rows="3"></textarea>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-green-600 mb-1">Opção Correta</label>
+                  <input type="text" value={newCorrectOption} onChange={e=>setNewCorrectOption(e.target.value)} required className="w-full p-2 border border-green-300 rounded-md text-sm focus:ring-green-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-red-500 mb-1">Opção Incorreta 1</label>
+                  <input type="text" value={newIncorrect1} onChange={e=>setNewIncorrect1(e.target.value)} required className="w-full p-2 border border-red-200 rounded-md text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-red-500 mb-1">Opção Incorreta 2</label>
+                  <input type="text" value={newIncorrect2} onChange={e=>setNewIncorrect2(e.target.value)} required className="w-full p-2 border border-red-200 rounded-md text-sm" />
+                </div>
+                <button type="submit" className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-lg text-sm">Guardar Pergunta</button>
+              </form>
+            </div>
+
+            {/* Lista de Perguntas */}
+            <div className="md:col-span-2">
+              <h3 className="text-lg font-bold text-slate-700 mb-4">Base de Dados ({questions.length})</h3>
+              <div className="h-[500px] overflow-y-auto pr-2 space-y-3">
+                {questions.map((q) => (
+                  <div key={q.id} className="p-4 border border-slate-200 rounded-xl relative hover:border-slate-300 bg-white">
+                    <button onClick={() => handleDeleteQuestion(q.id)} className="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors" title="Apagar">
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                    <p className="font-bold text-slate-800 text-sm mb-2 pr-8">{q.text}</p>
+                    <ul className="space-y-1">
+                      {q.options.map((opt, i) => (
+                        <li key={i} className={`text-xs p-1.5 rounded flex items-center gap-2 ${opt.isCorrect ? 'bg-green-50 text-green-700 font-semibold' : 'bg-slate-50 text-slate-500'}`}>
+                          {opt.isCorrect ? <CheckCircle className="w-3 h-3"/> : <XCircle className="w-3 h-3"/>}
+                          {opt.text}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
