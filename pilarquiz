@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quiz Competitivo: MA</title>
+  <title>Quiz Competitivo: CEM</title>
   
   <!-- Tailwind CSS para o design -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -28,32 +28,35 @@
   <div id="app"></div>
 
   <script>
+    // --- IMAGEM LOGO ---
+    // A sua imagem em Base64 inserida corretamente
+    const logoUrl = "data:image/png;base64,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";
+
     // --- DADOS INICIAIS ---
     const defaultQuestions = [
-      { id: 1, text: 'O que significa a sigla MA?', options: [{ text: 'Manutenção Autónoma', isCorrect: true }, { text: 'Manutenção Anual', isCorrect: false }, { text: 'Melhoria Avançada', isCorrect: false }] },
-      { id: 2, text: 'Qual é o principal objetivo da MA?', options: [{ text: 'Capacitar operadores para cuidar do equipamento', isCorrect: true }, { text: 'Reduzir o número de operadores', isCorrect: false }, { text: 'Comprar máquinas novas', isCorrect: false }] },
-      { id: 3, text: 'O que significa GA?', options: [{ text: 'Grupo Autónomo', isCorrect: true }, { text: 'Gestão Avançada', isCorrect: false }, { text: 'Grupo de Apoio', isCorrect: false }] },
-      { id: 4, text: 'Qual é o Passo 1 da MA?', options: [{ text: 'Limpeza Inicial', isCorrect: true }, { text: 'Padronização', isCorrect: false }, { text: 'Inspeção Geral', isCorrect: false }] },
-      { id: 5, text: 'Na MA, costuma-se dizer que a Limpeza é uma forma de...', options: [{ text: 'Inspeção', isCorrect: true }, { text: 'Punição', isCorrect: false }, { text: 'Perda de tempo', isCorrect: false }] },
-      { id: 6, text: 'Para que serve uma LPP (Lição Ponto a Ponto)?', options: [{ text: 'Treinar a equipa rapidamente e de forma visual', isCorrect: true }, { text: 'Solicitar peças ao armazém', isCorrect: false }, { text: 'Punir erros operacionais', isCorrect: false }] },
-      { id: 7, text: 'A Etiqueta Azul (ou Branca) indica uma anomalia que:', options: [{ text: 'O próprio operador pode e deve resolver', isCorrect: true }, { text: 'Apenas a Manutenção pode resolver', isCorrect: false }, { text: 'A máquina deve ser parada imediatamente', isCorrect: false }] },
-      { id: 8, text: 'O que é a Deterioração Forçada?', options: [{ text: 'Desgaste acelerado por falta de cuidados básicos', isCorrect: true }, { text: 'Desgaste natural da máquina com o tempo', isCorrect: false }, { text: 'Teste de qualidade destrutivo', isCorrect: false }] },
-      { id: 9, text: 'A Etiqueta Vermelha indica uma anomalia que:', options: [{ text: 'Requer a intervenção da equipa de Manutenção', isCorrect: true }, { text: 'O operador resolve sozinho', isCorrect: false }, { text: 'Não tem solução e deve ser ignorada', isCorrect: false }] },
-      { id: 10, text: 'O que deve fazer ao encontrar uma anomalia que não consegue resolver?', options: [{ text: 'Colocar uma Etiqueta Vermelha e registar', isCorrect: true }, { text: 'Ignorar e continuar a trabalhar', isCorrect: false }, { text: 'Tentar consertar mesmo sem conhecimento', isCorrect: false }] },
-      { id: 11, text: 'No 5S, o Seiri (Utilização/Seleção) significa:', options: [{ text: 'Separar o necessário do desnecessário', isCorrect: true }, { text: 'Limpar tudo brilhantemente', isCorrect: false }, { text: 'Criar padrões de trabalho', isCorrect: false }] },
-      { id: 12, text: 'No 5S, o Seiso (Limpeza) significa:', options: [{ text: 'Eliminar a sujidade inspecionando o equipamento', isCorrect: true }, { text: 'Apenas varrer o chão da fábrica', isCorrect: false }, { text: 'Guardar ferramentas na caixa', isCorrect: false }] },
-      { id: 13, text: 'A sigla TPM significa:', options: [{ text: 'Total Productive Maintenance', isCorrect: true }, { text: 'Total Performance Management', isCorrect: false }, { text: 'Time Per Machine', isCorrect: false }] },
-      { id: 14, text: 'Qual o principal benefício da LPP?', options: [{ text: 'Ensina um ponto específico de forma rápida e visual', isCorrect: true }, { text: 'Substitui manuais complexos de 100 páginas', isCorrect: false }, { text: 'Serve para registar as pausas da equipa', isCorrect: false }] },
-      { id: 15, text: 'A lubrificação correta das máquinas:', options: [{ text: 'Evita o desgaste acelerado e o aquecimento', isCorrect: true }, { text: 'Aumenta o ruído do equipamento', isCorrect: false }, { text: 'Desperdiça óleo e deve ser evitada', isCorrect: false }] },
-      { id: 16, text: 'Quais os sentidos usados na inspeção autónoma?', options: [{ text: 'Visão, audição, olfato e tato', isCorrect: true }, { text: 'Apenas a visão', isCorrect: false }, { text: 'Nenhum, o sistema avisa na tela', isCorrect: false }] },
-      { id: 17, text: 'Qual é o Passo 2 da Manutenção Autónoma?', options: [{ text: 'Eliminar fontes de sujidade e locais de difícil acesso', isCorrect: true }, { text: 'Limpeza Inicial do equipamento', isCorrect: false }, { text: 'Inspeção Geral com check-list', isCorrect: false }] },
-      { id: 18, text: 'Para que serve o Quadro do Grupo Autónomo (GA)?', options: [{ text: 'Gestão visual, acompanhamento de indicadores e comunicação', isCorrect: true }, { text: 'Para a diretoria avaliar salários', isCorrect: false }, { text: 'Apenas para enfeitar a área de trabalho', isCorrect: false }] },
-      { id: 19, text: 'Como deve ser uma boa reunião de GA?', options: [{ text: 'Curta, focada em anomalias e ações de melhoria', isCorrect: true }, { text: 'Longa, para discutir todos os problemas do mundo', isCorrect: false }, { text: 'Apenas o líder do grupo pode falar', isCorrect: false }] },
-      { id: 20, text: 'O que significa "Restaurar as Condições Básicas"?', options: [{ text: 'Limpar, reapertar e lubrificar', isCorrect: true }, { text: 'Comprar peças novas de última geração', isCorrect: false }, { text: 'Chamar a manutenção para fazer uma revisão anual', isCorrect: false }] },
+      { id: 1, text: 'Qual é a Crença central do Grupo Moura?', options: [{ text: 'Fortalecer vínculos garante um futuro melhor', isCorrect: true }, { text: 'Fazer o novo para perpetuar o negócio', isCorrect: false }, { text: 'Buscar o crescimento sustentável a qualquer custo', isCorrect: false }] },
+      { id: 2, text: 'O que significa a sigla CEM?', options: [{ text: 'Cultura Empresarial Moura', isCorrect: true }, { text: 'Centro de Excelência Moura', isCorrect: false }, { text: 'Conduta e Ética Moura', isCorrect: false }] },
+      { id: 3, text: 'Qual destes NÃO é um dos Valores do Grupo Moura descritos na cartilha?', options: [{ text: 'Competitividade', isCorrect: true }, { text: 'Integridade', isCorrect: false }, { text: 'Persistência', isCorrect: false }] },
+      { id: 4, text: 'De acordo com o Princípio 2, qual é o lema sobre a simplicidade?', options: [{ text: 'Simplificar para superar', isCorrect: true }, { text: 'O complexo traz a excelência', isCorrect: false }, { text: 'Fazer mais com menos', isCorrect: false }] },
+      { id: 5, text: 'O que é o "espírito de dono" no Grupo Moura (Princípio 6)?', options: [{ text: 'Assumir responsabilidades, arcar com consequências e cuidar do negócio', isCorrect: true }, { text: 'Ter ações na bolsa de valores da empresa', isCorrect: false }, { text: 'Trabalhar sozinho sem precisar da liderança', isCorrect: false }] },
+      { id: 6, text: 'Qual método é considerado vital para atingir e manter resultados (Princípio 9)?', options: [{ text: 'O método PDCA', isCorrect: true }, { text: 'O método 5S', isCorrect: false }, { text: 'O sistema de recompensas', isCorrect: false }] },
+      { id: 7, text: 'O que a cartilha diz sobre a "Liderança" (Princípio 8)?', options: [{ text: 'Atitudes são mais importantes que palavras, acreditando na liderança pelo exemplo', isCorrect: true }, { text: 'Os líderes devem centralizar todas as decisões importantes', isCorrect: false }, { text: 'Os líderes buscam pessoas que sejam sempre subordinadas a eles', isCorrect: false }] },
+      { id: 8, text: 'No Grupo Moura, como as pessoas são recompensadas segundo o Princípio 5?', options: [{ text: 'Pela meritocracia e entrega de resultados', isCorrect: true }, { text: 'Apenas pelo tempo de casa (antiguidade)', isCorrect: false }, { text: 'Pelo grau de escolaridade e diplomas', isCorrect: false }] },
+      { id: 9, text: 'Como a empresa encara os erros e acertos (Princípio 2)?', options: [{ text: 'Celebramos os acertos e aprendemos com os erros com humildade', isCorrect: true }, { text: 'Punimos os erros severamente para evitar repetições', isCorrect: false }, { text: 'Ignoramos os erros para manter o clima positivo', isCorrect: false }] },
+      { id: 10, text: 'O que o Princípio 10 ("Fazemos mais com menos") prega sobre ostentação?', options: [{ text: 'Somos austeros, não gostamos de ostentação', isCorrect: true }, { text: 'A ostentação é necessária para mostrar poder de mercado', isCorrect: false }, { text: 'A austeridade deve ser evitada para não desmotivar a equipe', isCorrect: false }] },
+      { id: 11, text: 'Em relação aos clientes, qual é o lema de trabalho do Grupo Moura (Princípio 14)?', options: [{ text: 'Trabalhamos com o foco no foco dos nossos clientes', isCorrect: true }, { text: 'O cliente tem sempre razão, mesmo quando vai contra os valores', isCorrect: false }, { text: 'O foco principal é apenas na venda imediata', isCorrect: false }] },
+      { id: 12, text: 'O que o Grupo Moura busca de forma permanente em relação à qualidade (Princípio 11)?', options: [{ text: 'A busca do "zero defeito"', isCorrect: true }, { text: 'A qualidade aceitável dentro da margem da indústria', isCorrect: false }, { text: 'Qualidade variável dependendo do tipo de produto', isCorrect: false }] },
+      { id: 13, text: 'Como é definido o trabalho em equipe (Princípio 7)?', options: [{ text: 'A cooperação potencializa os resultados em um ambiente informal', isCorrect: true }, { text: 'A cooperação atrasa as decisões, a individualidade é melhor', isCorrect: false }, { text: 'As decisões devem ser feitas em ambientes estritamente formais', isCorrect: false }] },
+      { id: 14, text: 'Como a empresa lida com as decisões e visão de futuro (Princípios 10 e 13)?', options: [{ text: 'Não agimos com imediatismo, as decisões contemplam o olhar para o futuro', isCorrect: true }, { text: 'O lucro no trimestre atual é a única prioridade', isCorrect: false }, { text: 'Arriscamos todos os recursos para dominar o mercado', isCorrect: false }] },
+      { id: 15, text: 'Qual é a Missão da divisão de Construção Civil do Grupo Moura?', options: [{ text: 'Realizar o sonho da casa própria construindo moradias acolhedoras e com qualidade', isCorrect: true }, { text: 'Construir prédios comerciais luxuosos', isCorrect: false }, { text: 'Fazer moradias temporárias para rápida expansão', isCorrect: false }] },
+      { id: 16, text: 'A segurança e a integridade das pessoas são de responsabilidade de quem?', options: [{ text: 'De todos, e devem ser garantidas a qualquer custo', isCorrect: true }, { text: 'Apenas do setor de Segurança do Trabalho', isCorrect: false }, { text: 'Exclusivamente dos diretores', isCorrect: false }] },
+      { id: 17, text: 'No que diz respeito ao aprendizado constante, o Grupo Moura afirma que "Aprendemos..."', options: [{ text: '...fazendo', isCorrect: true }, { text: '...apenas em salas de aula', isCorrect: false }, { text: '...somente com a teoria', isCorrect: false }] },
+      { id: 18, text: 'O que é fundamental para a obtenção e manutenção dos resultados, segundo o Princípio 2?', options: [{ text: 'O Sistema Moura de Gestão (SMG)', isCorrect: true }, { text: 'O sistema de premiação por produtividade', isCorrect: false }, { text: 'A contratação de consultorias externas', isCorrect: false }] },
+      { id: 19, text: 'Segundo o Princípio 3 ("Pensamos grande"), como o Grupo encara novos desafios?', options: [{ text: 'Como condição essencial para o crescimento da empresa', isCorrect: true }, { text: 'Com extremo cuidado, evitando qualquer mudança', isCorrect: false }, { text: 'Como um problema para as lideranças', isCorrect: false }] },
+      { id: 20, text: 'O que a cartilha fala sobre "Mudanças internas de funções"?', options: [{ text: 'São bem-vindas e estimuladas, como oportunidade de desenvolvimento', isCorrect: true }, { text: 'Devem ser evitadas para não desestabilizar os times', isCorrect: false }, { text: 'Só ocorrem quando alguém é demitido', isCorrect: false }] },
     ];
 
     const TOTAL_ROUNDS = 5;
-    const MAX_TIME_MS = 15000;
 
     // --- ESTADO GLOBAL ---
     let state = {
@@ -67,7 +70,8 @@
       currentQuestion: null,
       selectedOption: null,
       isAnswering: false,
-      timeLeft: MAX_TIME_MS,
+      maxTimeMs: 15000,
+      timeLeft: 15000,
       earnedPoints: null,
       timerInterval: null
     };
@@ -101,7 +105,7 @@
       render();
 
       if (newView === 'play') {
-        state.timeLeft = MAX_TIME_MS;
+        state.timeLeft = state.maxTimeMs;
         clearInterval(state.timerInterval);
         state.timerInterval = setInterval(() => {
           if (!state.isAnswering) {
@@ -130,6 +134,13 @@
       // Não chamamos render() aqui para não perder o foco no input
     }
 
+    function updateMaxTime(val) {
+      const secs = parseInt(val);
+      if (!isNaN(secs) && secs > 0) {
+        state.maxTimeMs = secs * 1000;
+      }
+    }
+
     function pickRandomQuestion() {
       const available = state.questions.filter(q => !state.usedQuestionIds.includes(q.id));
       if (available.length === 0) return null;
@@ -153,7 +164,7 @@
       if (firstQ) {
         state.currentQuestion = firstQ;
         state.usedQuestionIds.push(firstQ.id);
-        state.timeLeft = MAX_TIME_MS;
+        state.timeLeft = state.maxTimeMs;
         state.earnedPoints = null;
         state.isAnswering = false;
         changeView('intermission');
@@ -169,7 +180,7 @@
       clearInterval(state.timerInterval);
 
       if (isCorrect) {
-        const timeBonus = Math.round((state.timeLeft / MAX_TIME_MS) * 800);
+        const timeBonus = Math.round((state.timeLeft / state.maxTimeMs) * 800);
         state.earnedPoints = 200 + timeBonus;
         state.players[state.currentPlayerIndex].score += state.earnedPoints;
       } else {
@@ -264,7 +275,7 @@
 
     // --- MANIPULAÇÃO DOM (RENDERS) ---
     function updateTimerUI() {
-      const timePercentage = (state.timeLeft / MAX_TIME_MS) * 100;
+      const timePercentage = (state.timeLeft / state.maxTimeMs) * 100;
       const bar = document.getElementById('timer-bar');
       const text = document.getElementById('timer-text');
       
@@ -285,17 +296,21 @@
       }
     }
 
+    function renderLogo() {
+      return `
+        <div class="flex justify-center mb-6">
+          <img src="${logoUrl}" alt="Logo MA" class="h-24 object-contain rounded-lg shadow-sm bg-white p-2">
+        </div>
+      `;
+    }
+
     function renderMenu() {
       return `
         <div class="min-h-screen flex items-center justify-center p-4">
           <div class="bg-white max-w-xl w-full rounded-2xl shadow-xl p-8 text-center border-t-8 border-blue-600">
-            <div class="flex justify-center mb-6">
-              <div class="bg-blue-100 p-4 rounded-full flex items-center justify-center w-24 h-24">
-                <i class="fa-solid fa-gear text-5xl text-blue-600 animate-[spin_4s_linear_infinite]"></i>
-              </div>
-            </div>
-            <h1 class="text-4xl font-bold text-slate-800 mb-2">Quiz Competitivo: MA</h1>
-            <p class="text-slate-600 mb-8">Treine a sua equipa com o quiz de Manutenção Autónoma.</p>
+            ${renderLogo()}
+            <h1 class="text-4xl font-bold text-slate-800 mb-2">Quiz Competitivo: CEM</h1>
+            <p class="text-slate-600 mb-8">Treine a sua equipa com o quiz da Cultura Empresarial Moura.</p>
             
             <div class="space-y-4">
               <button onclick="changeView('setup')" class="w-full flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-xl transition-all transform hover:scale-105 shadow-lg text-lg">
@@ -326,27 +341,33 @@
       return `
         <div class="min-h-screen flex items-center justify-center p-4">
           <div class="bg-white max-w-xl w-full rounded-2xl shadow-xl p-8 border-t-8 border-blue-600">
-            <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+            ${renderLogo()}
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3 justify-center">
               <i class="fa-solid fa-users text-blue-600"></i> Configuração da Partida
             </h2>
             
             <div class="mb-6">
               <label class="block text-sm font-bold text-slate-700 mb-2">Quantos jogadores? (Máx 3)</label>
               <div class="flex gap-4">
-                ${[1, 2, 3].map(num => `
-                  <button onclick="updatePlayerCount(${num})" 
-                          class="flex-1 py-3 rounded-lg font-bold border-2 transition-colors ${state.playerCount === num ? 'bg-blue-100 border-blue-500 text-blue-700' : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300'}">
-                    ${num} ${num === 1 ? 'Jogador' : 'Jogadores'}
-                  </button>
-                `).join('')}
-              </div>
+              ${[1, 2, 3].map(num => `
+                <button onclick="updatePlayerCount(${num})" 
+                        class="flex-1 py-3 rounded-lg font-bold border-2 transition-colors ${state.playerCount === num ? 'bg-blue-100 border-blue-500 text-blue-700' : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300'}">
+                  ${num} ${num === 1 ? 'Jogador' : 'Jogadores'}
+                </button>
+              `).join('')}
             </div>
+          </div>
 
-            <div class="space-y-4 mb-8">
-              ${playersHtml}
-            </div>
+          <div class="mb-6">
+            <label class="block text-sm font-bold text-slate-700 mb-2"><i class="fa-solid fa-stopwatch"></i> Tempo por Pergunta (em Segundos)</label>
+            <input type="number" min="5" value="${Math.floor(state.maxTimeMs / 1000)}" oninput="updateMaxTime(this.value)" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-bold text-slate-700 bg-white" placeholder="Digite os segundos (ex: 15)" />
+          </div>
 
-            <div class="flex gap-4">
+          <div class="space-y-4 mb-8">
+            ${playersHtml}
+          </div>
+
+          <div class="flex gap-4">
               <button onclick="changeView('menu')" class="flex-1 py-4 font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">Voltar</button>
               <button onclick="startGame()" class="flex-1 py-4 font-bold text-white bg-green-500 hover:bg-green-600 rounded-xl transition-colors shadow-lg">Começar Partida</button>
             </div>
@@ -360,6 +381,7 @@
       return `
         <div class="min-h-screen flex items-center justify-center p-4 text-center">
           <div class="bg-white max-w-lg w-full rounded-2xl shadow-xl p-10 border-t-8 border-yellow-400">
+            ${renderLogo()}
             <div class="mb-2 text-sm font-bold text-slate-400 uppercase tracking-widest">Ronda ${state.currentRound} de ${TOTAL_ROUNDS}</div>
             <h2 class="text-3xl font-bold text-slate-800 mb-4">Passe o dispositivo</h2>
             <p class="text-xl text-slate-600 mb-8">Agora é o turno de:<br/>
@@ -423,7 +445,7 @@
       }
 
       // Cálculo inicial da barra de progresso (antes do javascript assumir no setInterval)
-      const timePercentage = (state.timeLeft / MAX_TIME_MS) * 100;
+      const timePercentage = (state.timeLeft / state.maxTimeMs) * 100;
       let timerColor = 'bg-green-500';
       if (timePercentage < 50) timerColor = 'bg-yellow-500';
       if (timePercentage < 20) timerColor = 'bg-red-500';
@@ -443,6 +465,7 @@
             </div>
 
             <div class="p-8">
+              ${renderLogo()}
               <div class="flex justify-between items-center mb-6 border-b pb-4">
                 <div>
                   <span class="text-sm font-bold text-slate-500 uppercase block">A jogar agora:</span>
@@ -507,6 +530,7 @@
       return `
         <div class="min-h-screen flex items-center justify-center p-4 text-center">
           <div class="bg-white max-w-3xl w-full rounded-2xl shadow-xl p-8 border-t-8 border-yellow-500">
+            ${renderLogo()}
             <i class="fa-solid fa-trophy text-7xl text-yellow-500 mx-auto mb-4 block"></i>
             <h1 class="text-4xl font-black text-slate-800 mb-8">Pódio Final</h1>
             
@@ -547,9 +571,12 @@
         <div class="min-h-screen p-4 sm:p-8">
           <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border-t-8 border-slate-800">
             <div class="p-6 bg-slate-50 border-b flex justify-between items-center">
-              <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-3">
-                <i class="fa-solid fa-gear text-slate-600"></i> Gestão de Perguntas
-              </h2>
+              <div class="flex items-center gap-4">
+                <img src="${logoUrl}" alt="Logo MA" class="h-12 object-contain bg-white rounded p-1 shadow-sm">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-3">
+                  <i class="fa-solid fa-gear text-slate-600"></i> Gestão de Perguntas
+                </h2>
+              </div>
               <button onclick="changeView('menu')" class="text-blue-600 font-bold hover:underline">Voltar ao Menu</button>
             </div>
 
