@@ -277,6 +277,40 @@ label.small { font-size: 13px; color: var(--muted); }
 .pill.zero { color: var(--dim); }
 .pill.zero i { background: transparent; box-shadow: inset 0 0 0 1.5px var(--c); }
 .pill.me i { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--gold-hi); }
+.mcal { display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 6px; }
+.mcal .wd { text-align: center; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); padding-bottom: 4px; }
+.mcal .wd.sun { color: var(--gold); }
+.mcell {
+  min-width: 0; min-height: 74px; padding: 6px 5px 7px; border-radius: 12px; display: flex; flex-direction: column; align-items: stretch; gap: 6px;
+  background: transparent; border: 1px solid transparent; color: var(--ink); font: inherit; text-align: left;
+  animation: rise .4s var(--ease) both; animation-delay: calc(var(--i, 0) * 14ms);
+}
+.nms { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; max-width: 100%; }
+.mcell.faixa { grid-column: 1 / -1; min-height: 0; }
+.mcell.faixa .nms { flex-direction: row; flex-wrap: wrap; }
+.faixa-cultos { display: flex; flex-direction: column; gap: 8px; }
+.mcell .n { font: 800 14px/1 var(--font-display); font-variant-numeric: tabular-nums; padding-left: 2px; }
+.mcell.dom .n { color: var(--gold-hi); }
+.mcell.vazio { min-height: 0; padding: 0; }
+.mcell.sem { border: 1px dashed var(--line-soft); color: var(--dim); }
+.mcell.has { background: rgba(19,48,112,.78); border-color: var(--line-soft); cursor: pointer; transition: border-color .2s, transform .2s var(--ease), background .2s; }
+.mcell.has:active { transform: scale(.97); }
+.mcell.sel { border-color: var(--gold); background: rgba(217,178,95,.13); box-shadow: 0 0 0 1px var(--gold) inset, 0 10px 24px -12px rgba(217,178,95,.8); }
+.mcell.today .n { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--gold); }
+.mc { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; padding-left: 6px; border-left: 2px solid var(--c); }
+.mh { font: 700 10.5px/1.1 var(--font-body); letter-spacing: .02em; color: var(--c); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.cn {
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font: 600 11.5px/1.3 var(--font-body); padding: 2px 7px; border-radius: 7px;
+  background: rgba(238,242,251,.09); color: var(--ink);
+  animation: rise .35s var(--ease) both; animation-delay: calc(var(--i, 0) * 14ms + 120ms);
+}
+.cn.me { background: var(--grad-gold); color: var(--on-gold); }
+.cn.novo { animation: chega 1.6s var(--ease) both; }
+@keyframes chega { 0% { opacity: 0; transform: scale(.6); } 25% { opacity: 1; transform: scale(1.12); box-shadow: 0 0 0 4px rgba(123,224,176,.45); } 100% { transform: none; box-shadow: 0 0 0 0 rgba(123,224,176,0); } }
+.mais { font: 700 10.5px var(--font-body); color: var(--gold); padding-left: 2px; }
+.nada { font-size: 10.5px; color: var(--dim); font-style: italic; }
+.calm .mcell, .calm .cn:not(.novo), .calm .day, .calm .adm-day { animation: none; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; padding: 0 4px; font-size: 11.5px; color: var(--muted); }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 .legend i { width: 7px; height: 7px; border-radius: 50%; background: var(--c); }
@@ -318,6 +352,32 @@ label.small { font-size: 13px; color: var(--muted); }
 .live i { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 rgba(123,224,176,.6); animation: livePulse 1.8s ease-out infinite; }
 @keyframes livePulse { 70% { box-shadow: 0 0 0 8px rgba(123,224,176,0); } 100% { box-shadow: 0 0 0 0 rgba(123,224,176,0); } }
 .calm.screen, .calm .cell, .calm .list-day, .calm .detail, .calm .profile .big { animation: none; }
+
+/* ---------- Administrador ---------- */
+.admin-on { border-color: var(--line); background: linear-gradient(160deg, rgba(217,178,95,.12), rgba(14,38,88,.6)); }
+.admin-head { display: flex; gap: 12px; align-items: center; }
+.admin-head svg { width: 34px; height: 34px; color: var(--gold-hi); flex: none; }
+.admin-head b { display: block; font-family: var(--font-display); }
+.admin-head span { font-size: 13px; color: var(--muted); }
+.adm-msg { margin: 0; min-height: 1.2em; font-size: 13px; color: var(--warn); }
+.add-ev { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 8px; }
+.adm-list { display: flex; flex-direction: column; gap: 14px; }
+.adm-day { display: flex; flex-direction: column; gap: 8px; animation: rise .4s var(--ease) both; animation-delay: calc(var(--i, 0) * 30ms); }
+.adm-day h4 { margin: 0; font: 700 14px var(--font-display); color: var(--gold-hi); }
+.adm-row { display: grid; grid-template-columns: 4px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 10px 12px 10px 0; border-radius: var(--r-md); background: var(--card); border: 1px solid var(--line-soft); transition: opacity .3s, background .3s; overflow: hidden; }
+.adm-row .stripe { align-self: stretch; margin-block: -10px; background: var(--c); }
+.adm-row .t { min-width: 0; }
+.adm-row .t b { display: block; font-weight: 600; }
+.adm-row .t small { color: var(--muted); font-size: 12.5px; display: flex; gap: 6px; flex-wrap: wrap; }
+.adm-row .t small em { font-style: normal; color: var(--c); font-weight: 600; }
+.adm-row.off { opacity: .55; background: rgba(14,38,88,.35); }
+.adm-row.off .t b { text-decoration: line-through; text-decoration-color: rgba(238,242,251,.5); }
+.sw { position: relative; width: 50px; height: 30px; border-radius: 999px; border: 1px solid var(--line-soft); background: rgba(159,176,208,.18); cursor: pointer; transition: background .3s, border-color .3s; flex: none; }
+.sw i { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--ink); box-shadow: 0 2px 6px rgba(0,0,0,.4); transition: transform .35s var(--ease), background .3s; }
+.sw[aria-checked="true"] { background: var(--gold); border-color: var(--gold-hi); }
+.sw[aria-checked="true"] i { transform: translateX(20px); background: #fff8e1; }
+.icon-btn.danger { color: #ffb3b3; border-color: rgba(255,140,140,.3); }
+.btn.warn { border-color: var(--warn); color: var(--warn); }
 
 /* ---------- Usuário ---------- */
 .profile { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 26px 16px; border-radius: var(--r-lg); background: linear-gradient(160deg, rgba(19,48,112,.95), rgba(10,31,74,.95)); border: 1px solid var(--line); }
@@ -390,6 +450,9 @@ const CONFIG = {
     messagingSenderId: "394958677291",
     appId: "1:394958677291:web:2d70ca9a46fed6c25f516e",
   },
+  // Administrador: entra com a senha da igreja. No Firebase, a senha é a do usuário abaixo
+  // (Authentication > Usuários). Só ele pode tirar cultos ou criar eventos.
+  adminEmail: "admin@escala-advec.app",
   obreiros: [
     "Dc. Bezerra", "Dc. David", "Dc. Francisco", "Dc. Josival", "Dc. Maicon", "Dc. Victor",
     "Ob. Alex", "Ob. Augusto", "Ob. Edmilson", "Ob. Gerson", "Ob. Matheus", "Ob. Rofferson",
@@ -406,14 +469,17 @@ const TIPOS = {
   palavra:      { nome: "Culto da Palavra",       curto: "Palavra",       hora: "",      cor: "#7fb2ff", chip: "Segundas · Palavra" },
   vitoria:      { nome: "Culto da Vitória",       curto: "Vitória",       hora: "",      cor: "#f0c75e", chip: "Quartas · Vitória" },
   sobrenatural: { nome: "Culto do Sobrenatural",  curto: "Sobrenatural",  hora: "",      cor: "#c79bff", chip: "Última sexta · Sobrenatural" },
+  evento:       { nome: "Evento especial",        curto: "Evento",        hora: "",      cor: "#ff9fb2", chip: "Eventos especiais" },
 };
-const ORDEM = ["palavra", "vitoria", "edp", "cel1", "cel2", "sobrenatural"];
+const ORDEM = ["palavra", "vitoria", "edp", "cel1", "cel2", "sobrenatural", "evento"];
+const SENHA_HASH = "3293a527dc537507d5e7f06fd7b47834441a9dc8d55d68c5e1dd10e179f0c5de"; // usada só na prévia/sem Firebase
 const DOW = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const DOW_LONG = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 const pad = n => String(n).padStart(2, "0");
 
-function cultosDoMes(ano, mes) {
+/* Cultos habituais do mês (antes dos ajustes do administrador). */
+function cultosPadrao(ano, mes) {
   const total = new Date(ano, mes + 1, 0).getDate();
   let ultimaSexta = 0;
   for (let d = 1; d <= total; d++) if (new Date(ano, mes, d).getDay() === 5) ultimaSexta = d;
@@ -425,9 +491,34 @@ function cultosDoMes(ano, mes) {
     else if (dow === 1) tipos = ["palavra"];
     else if (dow === 3) tipos = ["vitoria"];
     else if (dow === 5 && d === ultimaSexta) tipos = ["sobrenatural"];
-    if (tipos.length) dias.push({ d, dow, cultos: tipos.map(t => ({ id: `${ano}-${pad(mes + 1)}-${pad(d)}-${t}`, tipo: t, d, dow })) });
+    if (tipos.length) dias.push({ d, dow, cultos: tipos.map(t => ({ id: `${ano}-${pad(mes + 1)}-${pad(d)}-${t}`, tipo: t, d, dow, t: TIPOS[t] })) });
   }
   return dias;
+}
+function ajustesDo(ym) {
+  const a = state.dados[ym]?.eventos || {};
+  return { removidos: Array.isArray(a.removidos) ? a.removidos.map(String) : [], extras: Array.isArray(a.extras) ? a.extras.filter(e => e && e.id && e.data && e.nome) : [] };
+}
+const minutos = h => { const m = /^(\d{1,2}):(\d{2})$/.exec(h || ""); return m ? +m[1] * 60 + +m[2] : 9999; };
+function eventoComoCulto(e, ano, mes) {
+  const d = +String(e.data).slice(8, 10), dow = new Date(ano, mes, d).getDay();
+  const nome = String(e.nome).slice(0, 40), hora = String(e.hora || "").slice(0, 5);
+  return { id: String(e.id), tipo: "evento", d, dow, extra: true, t: { nome, curto: nome, hora, cor: TIPOS.evento.cor, chip: TIPOS.evento.chip } };
+}
+/* Cultos que valem no mês: os habituais, menos os retirados, mais os eventos criados pelo administrador. */
+function cultosDoMes(ano, mes) {
+  const ym = `${ano}-${pad(mes + 1)}`, total = new Date(ano, mes + 1, 0).getDate();
+  const aj = ajustesDo(ym), fora = new Set(aj.removidos);
+  const porDia = new Map();
+  for (const dia of cultosPadrao(ano, mes)) porDia.set(dia.d, dia.cultos.filter(c => !fora.has(c.id)));
+  for (const e of aj.extras) {
+    const d = +String(e.data).slice(8, 10);
+    if (!String(e.data).startsWith(ym + "-") || !(d >= 1 && d <= total)) continue;
+    if (!porDia.has(d)) porDia.set(d, []);
+    porDia.get(d).push(eventoComoCulto(e, ano, mes));
+  }
+  return [...porDia.entries()].filter(([, cs]) => cs.length).sort((a, b) => a[0] - b[0])
+    .map(([d, cs]) => ({ d, dow: new Date(ano, mes, d).getDay(), cultos: cs.sort((a, b) => (a.extra === b.extra ? 0 : a.extra ? 1 : -1) || (a.extra ? minutos(a.t.hora) - minutos(b.t.hora) : 0)) }));
 }
 
 /* ===================== ARMAZENAMENTO =====================
@@ -445,27 +536,41 @@ const slug = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().repla
 const mesmoNome = (a, b) => slug(a) === slug(b);
 function comTempo(p, ms = 15000) { return Promise.race([p, new Promise((_, r) => setTimeout(() => r(Object.assign(new Error("tempo"), { code: "tempo" })), ms))]); }
 function juntar(cb) {
-  let rs = null, os = null;
+  const v = { respostas: null, obreiros: null, eventos: null };
+  const emitir = () => { if (v.respostas && v.obreiros && v.eventos) cb({ ...v }); };
   return {
-    respostas(v) { rs = v; if (os) cb({ respostas: rs, obreiros: os }); },
-    obreiros(v) { os = v; if (rs) cb({ respostas: rs, obreiros: os }); },
+    respostas(x) { v.respostas = x; emitir(); },
+    obreiros(x) { v.obreiros = x; emitir(); },
+    eventos(x) { v.eventos = x || {}; emitir(); },
   };
 }
+async function sha256(txt) {
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(txt));
+  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join("");
+}
+/* Admin sem Firebase (prévia): confere a senha pelo hash e lembra neste aparelho. */
+const adminSimples = {
+  async entrar(senha) { if ((await sha256(senha)) !== SENHA_HASH) throw Object.assign(new Error("senha"), { code: "senha" }); local.set("advec:admin", true); return true; },
+  async sair() { local.del("advec:admin"); },
+  async restaurar() { return !!local.get("advec:admin"); },
+};
 
 function backendLocal() {
   const K = "advec:banco-local";
-  const ler = () => local.get(K) || { respostas: {}, obreiros: [] };
+  const ler = () => ({ respostas: {}, obreiros: [], eventos: {}, ...(local.get(K) || {}) });
   const ouvintes = new Set();
   const avisar = () => ouvintes.forEach(f => f());
   return {
     modo: "local", compartilhado: false, aoVivo: false,
     observar(ym, cb) {
-      const f = () => { const b = ler(); cb({ respostas: Object.values(b.respostas[ym] || {}), obreiros: b.obreiros }); };
+      const f = () => { const b = ler(); cb({ respostas: Object.values(b.respostas[ym] || {}), obreiros: b.obreiros, eventos: b.eventos[ym] || {} }); };
       ouvintes.add(f); setTimeout(f, 0);
       return () => ouvintes.delete(f);
     },
     async salvar(r) { const b = ler(); (b.respostas[r.mes] ||= {})[slug(r.nome)] = r; local.set(K, b); avisar(); },
     async addNome(nome) { const b = ler(); if (!b.obreiros.some(n => mesmoNome(n, nome))) b.obreiros.push(nome); local.set(K, b); avisar(); },
+    async salvarEventos(ym, aj) { const b = ler(); b.eventos[ym] = aj; local.set(K, b); avisar(); },
+    admin: adminSimples,
   };
 }
 function backendArtifact(db) {
@@ -475,10 +580,13 @@ function backendArtifact(db) {
       const j = juntar(cb);
       const u1 = db.collection("respostas").where("mes", "==", ym).onSnapshot(s => j.respostas(s.docs.map(d => d.data())), falha);
       const u2 = db.collection("obreiros").onSnapshot(s => j.obreiros(s.docs.map(d => String(d.data().nome || "")).filter(Boolean)), falha);
-      return () => { u1(); u2(); };
+      const u3 = db.doc(`eventos/${ym}`).onSnapshot(s => j.eventos(s.exists ? s.data() : {}), falha);
+      return () => { u1(); u2(); u3(); };
     },
     salvar: r => db.doc(`respostas/${r.mes}_${slug(r.nome)}`).set(r),
     addNome: nome => db.doc(`obreiros/${slug(nome)}`).set({ nome }),
+    salvarEventos: (ym, aj) => db.doc(`eventos/${ym}`).set(aj),
+    admin: adminSimples,
   };
 }
 function carregarScript(src) {
@@ -502,10 +610,32 @@ async function backendFirebase(cfg) {
       const j = juntar(cb);
       const u1 = fs.collection("respostas").where("mes", "==", ym).onSnapshot(s => j.respostas(s.docs.map(d => d.data())), falha);
       const u2 = fs.collection("obreiros").onSnapshot(s => j.obreiros(s.docs.map(d => String(d.data().nome || "")).filter(Boolean)), falha);
-      return () => { u1(); u2(); };
+      const u3 = fs.doc(`eventos/${ym}`).onSnapshot(s => j.eventos(s.exists ? s.data() : {}), falha);
+      return () => { u1(); u2(); u3(); };
     },
     salvar: r => fs.doc(`respostas/${r.mes}_${slug(r.nome)}`).set(r),
     addNome: nome => fs.doc(`obreiros/${slug(nome)}`).set({ nome }),
+    salvarEventos: (ym, aj) => fs.doc(`eventos/${ym}`).set(aj),
+    // Administrador = login do Firebase Authentication (e-mail fixo + senha da igreja).
+    admin: {
+      async carregar() {
+        if (!firebase.auth) await carregarScript(base + "firebase-auth-compat.js");
+        const auth = firebase.auth();
+        await new Promise(ok => { const u = auth.onAuthStateChanged(() => { u(); ok(); }); });
+        return auth;
+      },
+      async entrar(senha) {
+        const auth = await this.carregar();
+        await auth.signInWithEmailAndPassword(CONFIG.adminEmail, senha);
+        local.set("advec:admin", true); return true;
+      },
+      async sair() { local.del("advec:admin"); if (firebase.auth) await firebase.auth().signOut(); },
+      async restaurar() {
+        if (!local.get("advec:admin")) return false;
+        const auth = await this.carregar();
+        return !!auth.currentUser && auth.currentUser.email === CONFIG.adminEmail;
+      },
+    },
   };
 }
 let backend = null;
@@ -531,6 +661,7 @@ const state = {
   extras: local.get("advec:extras") || [],
   dados: {},          // ym -> { status, respostas }
   calView: "cal", diaSel: null,
+  admin: false,
 };
 const mesAtual = () => { const m = new Date(base.getFullYear(), base.getMonth() + state.offset, 1); return { ano: m.getFullYear(), mes: m.getMonth(), ym: `${m.getFullYear()}-${pad(m.getMonth() + 1)}` }; };
 const chaveRascunho = () => `advec:rascunho:${slug(state.nome)}:${mesAtual().ym}`;
@@ -549,12 +680,13 @@ function todosNomes() {
 function minhaResposta(ym) { return (state.dados[ym]?.respostas || []).find(r => mesmoNome(r.nome, state.nome)); }
 
 let assinatura = { ym: null, parar: null };
+let calNomesVistos = new Set();
 function carregarMes(ym, { forcar = false } = {}) {
   if (assinatura.ym === ym && !forcar) return;
   if (assinatura.parar) assinatura.parar();
   assinatura = { ym, parar: null };
   const atual = state.dados[ym];
-  state.dados[ym] = { status: atual?.status === "ok" && !forcar ? "ok" : "carregando", respostas: atual?.respostas || [], erro: "" };
+  state.dados[ym] = { status: atual?.status === "ok" && !forcar ? "ok" : "carregando", respostas: atual?.respostas || [], eventos: atual?.eventos || {}, erro: "" };
   aoMudarDados(ym);
   backendPronto.then(() => {
     if (assinatura.ym !== ym) return;
@@ -585,8 +717,9 @@ function aplicarDados(ym, r) {
     if (mudou.length === 1) toast(`${mudou[0].nome} atualizou a disponibilidade`);
     else if (mudou.length > 1) toast(`${mudou.length} obreiros atualizaram a disponibilidade`);
   }
-  state.dados[ym] = { status: "ok", respostas: novas, erro: "" };
-  aoMudarDados(ym);
+  const eventosMudaram = JSON.stringify(antes?.eventos || {}) !== JSON.stringify(r.eventos || {});
+  state.dados[ym] = { status: "ok", respostas: novas, eventos: r.eventos || {}, erro: "" };
+  aoMudarDados(ym, eventosMudaram && antes?.status === "ok");
 }
 
 /* ===================== HELPERS ===================== */
@@ -612,6 +745,9 @@ const ICON = {
   plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
   swap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4L3 8l4 4"/><path d="M3 8h13a4 4 0 0 1 4 4"/><path d="M17 20l4-4-4-4"/><path d="M21 16H8a4 4 0 0 1-4-4"/></svg>',
   info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>',
+  shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>',
+  cal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>',
   check: '<svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="13"/><path d="M9 15.5l4 4 8-8.5"/></svg>',
 };
 const CARGOS = [[/^dc\.?\s*/i, "Diácono"], [/^ob\.?\s*/i, "Obreiro"], [/^pb\.?\s*/i, "Presbítero"], [/^pr\.?\s*/i, "Pastor"], [/^ev\.?\s*/i, "Evangelista"], [/^dca\.?\s*/i, "Diaconisa"], [/^miss\.?\s*/i, "Missionária"]];
@@ -662,20 +798,30 @@ function render() {
   dockSlot.replaceChildren();
   if (!state.nome) { tabbar.hidden = true; app.classList.add("no-tabs"); telaNome(); window.scrollTo({ top: 0 }); carregarMes(mesAtual().ym); return; }
   tabbar.hidden = false; app.classList.remove("no-tabs");
-  const idx = ["agenda", "calendario", "usuario"].indexOf(state.tab);
+  const idx = ["agenda", "calendario", "usuario"].indexOf(state.tab === "admin" ? "usuario" : state.tab);
   tabbar.querySelectorAll(".tab").forEach((b, i) => b.setAttribute("aria-selected", String(i === idx)));
   document.getElementById("tab-ind").style.transform = `translateX(${idx * 100}%) translateX(${idx * 40}px)`;
   if (state.tab === "agenda") telaAgenda();
   else if (state.tab === "calendario") telaCalendario();
-  else telaUsuario();
+  else if (state.tab === "admin" && state.admin) telaAdmin();
+  else { state.tab = "usuario"; telaUsuario(); }
   window.scrollTo({ top: 0 });
 }
-function aoMudarDados(ym) {
+function aoMudarDados(ym, eventosMudaram = false) {
   if (!state.nome) { if (state.dados[ym]?.status !== "carregando" && todosNomes().length !== nomesNaTela) { const y = window.scrollY; telaNome(); window.scrollTo({ top: y }); } return; }
   if (ym !== mesAtual().ym) return;
-  if (state.tab === "agenda") sincronizarAgenda();
-  else if (state.tab === "calendario") { const y = window.scrollY; telaCalendario(true); window.scrollTo({ top: y }); }
+  const y = window.scrollY;
+  if (state.tab === "agenda") {
+    const { ano, mes } = mesAtual();
+    const ids = cultosDoMes(ano, mes).flatMap(d => d.cultos.map(c => c.id)).join();
+    if (ui.todos && ids !== ui.todos.map(c => c.id).join()) {
+      telaAgenda(true); window.scrollTo({ top: y });
+      if (eventosMudaram) toast("O administrador atualizou os cultos do mês");
+    } else sincronizarAgenda();
+  }
+  else if (state.tab === "calendario") { telaCalendario(true); window.scrollTo({ top: y }); }
   else if (state.tab === "usuario") telaUsuario(true);
+  else if (state.tab === "admin") { telaAdmin(true); window.scrollTo({ top: y }); }
 }
 
 /* ===================== TELA: QUEM É VOCÊ ===================== */
@@ -727,7 +873,7 @@ function entrarComo(nome) {
 }
 
 /* ===================== ABA: MINHA AGENDA ===================== */
-function telaAgenda() {
+function telaAgenda(calmo = false) {
   const { ano, mes, ym } = mesAtual();
   const dias = cultosDoMes(ano, mes);
   const todos = dias.flatMap(d => d.cultos);
@@ -737,6 +883,7 @@ function telaAgenda() {
   const ring = h("div", { class: "ring" });
   ring.innerHTML = `<svg viewBox="0 0 84 84"><circle class="track" cx="42" cy="42" r="38"/><circle class="bar" cx="42" cy="42" r="38" stroke-dasharray="${C}" stroke-dashoffset="${C}"/></svg>`;
   ring.append(h("div", { class: "val" }, h("div", {}, h("b", { id: "count" }, "0"), h("span", {}, `de ${todos.length}`))));
+  state.sel = new Set([...state.sel].filter(id => todos.some(c => c.id === id)));
   ui.ringBar = ring.querySelector(".bar"); ui.C = C;
   ui.statusTxt = h("div", { class: "status-line" }, h("span", { class: "dot" }), h("span", {}, ""));
 
@@ -751,7 +898,7 @@ function telaAgenda() {
     h("div", { class: "day", style: `--i:${Math.min(i, 14)}` },
       h("div", { class: "date" + (dia.dow === 0 ? " sun" : ""), "aria-hidden": "true" }, h("b", {}, pad(dia.d)), h("span", {}, DOW[dia.dow])),
       h("div", { class: "slots" }, dia.cultos.map(c => {
-        const t = TIPOS[c.tipo];
+        const t = c.t;
         const b = h("button", { class: "slot", style: `--c:${t.cor}`, "aria-pressed": String(state.sel.has(c.id)),
             "aria-label": `${DOW_LONG[c.dow]}, ${c.d} de ${MESES[mes]}: ${t.nome}${t.hora ? " às " + t.hora : ""}`, onclick: e => alternar(c.id, e) },
           h("span", { class: "stripe" }),
@@ -760,11 +907,12 @@ function telaAgenda() {
         ui.slots.set(c.id, b); return b;
       })))));
 
+  if (!dias.length) lista.append(h("div", { class: "empty" }, h("b", {}, "Nenhum culto neste mês"), "O administrador ainda não definiu os cultos deste mês."));
   const obs = h("textarea", { class: "input", id: "obs", rows: "2", placeholder: "Ex.: Na quarta só consigo chegar às 19h.",
     oninput: e => { state.obs = e.target.value; marcarAlterado(); } });
   obs.value = state.obs; ui.obs = obs;
 
-  app.replaceChildren(h("section", { class: "screen" },
+  app.replaceChildren(h("section", { class: "screen" + (calmo ? " calm" : "") },
     topbar("Minha disponibilidade"),
     h("div", { class: "summary" }, ring,
       h("div", { style: "min-width:0" },
@@ -870,7 +1018,8 @@ async function salvar() {
 }
 function resumoPessoa(r) {
   if (!r.cultos.length) return "Indisponível no mês";
-  return r.cultos.map(id => { const [, , d, t] = id.match(/^(\d{4})-\d{2}-(\d{2})-(\w+)$/) || []; return `${d} ${TIPOS[t]?.curto || t}`; }).join(", ");
+  const mapa = new Map((ui.todos || []).map(c => [c.id, c]));
+  return r.cultos.map(id => { const c = mapa.get(id); return c ? `${pad(c.d)} ${c.t.curto}` : id; }).join(", ");
 }
 
 /* ===================== ABA: CALENDÁRIO GERAL ===================== */
@@ -915,30 +1064,77 @@ function telaCalendario(calmo = false) {
 
   let corpo;
   if (state.calView === "cal") {
+    // Só as colunas que têm culto: Domingo, Segunda e Quarta. A sexta do Sobrenatural vira uma faixa larga na semana dela.
+    const COLS = [0, 1, 3, 5];
     const primeiro = new Date(ano, mes, 1).getDay(), total = new Date(ano, mes + 1, 0).getDate();
-    const cells = ["D", "S", "T", "Q", "Q", "S", "S"].map((w, i) => h("div", { class: "wd" + (i === 0 ? " sun" : "") }, w));
-    for (let i = 0; i < primeiro; i++) cells.push(h("div", { class: "cell", "aria-hidden": "true" }));
+    const semanas = [];
     for (let d = 1; d <= total; d++) {
-      const dia = porDia.get(d);
-      const isHoje = ano === hoje.getFullYear() && mes === hoje.getMonth() && d === hoje.getDate();
-      if (!dia) { cells.push(h("div", { class: "cell" + (isHoje ? " today" : ""), style: `--i:${d}` }, h("span", { class: "n" }, String(d)))); continue; }
-      cells.push(h("button", { class: "cell has" + (d === state.diaSel ? " sel" : "") + (isHoje ? " today" : ""), style: `--i:${d}`,
-          "aria-label": `${DOW_LONG[dia.dow]}, ${d}: ` + dia.cultos.map(c => `${TIPOS[c.tipo].nome}, ${disp(c.id).length} disponíveis`).join("; "),
-          "aria-pressed": String(d === state.diaSel),
-          onclick: () => { state.diaSel = d; vibrar(8); const y = window.scrollY; telaCalendario(true); window.scrollTo({ top: y }); document.getElementById("detalhe")?.scrollIntoView({ behavior: "smooth", block: "nearest" }); } },
-        h("span", { class: "n" }, String(d)),
-        dia.cultos.map(c => { const n = disp(c.id).length; const eu = state.sel.has(c.id) || disp(c.id).some(r => mesmoNome(r.nome, state.nome));
-          return h("span", { class: "pill" + (n ? "" : " zero") + (eu ? " me" : ""), style: `--c:${TIPOS[c.tipo].cor}` }, h("i"), String(n)); })));
+      const dow = (primeiro + d - 1) % 7, w = Math.floor((primeiro + d - 1) / 7);
+      (semanas[w] ||= {})[dow] = d;
+    }
+    const vistosAntes = calNomesVistos; calNomesVistos = new Set();
+    const MAX = 6;
+    const cells = ["Domingo", "Segunda", "Quarta"].map((w, i) => h("div", { class: "wd" + (i === 0 ? " sun" : "") }, w));
+    let i = 0;
+    for (const sem of semanas.filter(Boolean)) {
+      for (const col of COLS) {
+        const d = sem[col]; i++;
+        if (col === 5) continue; // sextas e outros dias entram como faixa larga abaixo
+        if (!d) { cells.push(h("div", { class: "mcell vazio", "aria-hidden": "true" })); continue; }
+        const dia = porDia.get(d);
+        const isHoje = ano === hoje.getFullYear() && mes === hoje.getMonth() && d === hoje.getDate();
+        if (!dia) { cells.push(h("div", { class: "mcell sem" + (isHoje ? " today" : ""), style: `--i:${i}` }, h("span", { class: "n" }, pad(d)), h("span", { class: "nada" }, "sem culto"))); continue; }
+        cells.push(h("button", { class: "mcell has" + (d === state.diaSel ? " sel" : "") + (isHoje ? " today" : "") + (dia.dow === 0 ? " dom" : "") + (dia.dow === 5 ? " faixa" : ""), style: `--i:${i}`,
+            "aria-label": `${DOW_LONG[dia.dow]}, ${d}: ` + dia.cultos.map(c => `${c.t.nome}: ${disp(c.id).map(r => r.nome).join(", ") || "ninguém"}`).join("; "),
+            "aria-pressed": String(d === state.diaSel),
+            onclick: () => { state.diaSel = d; vibrar(8); const y = window.scrollY; telaCalendario(true); window.scrollTo({ top: y }); document.getElementById("detalhe")?.scrollIntoView({ behavior: "smooth", block: "nearest" }); } },
+          h("span", { class: "n" }, pad(d)),
+          dia.cultos.map(c => {
+            const t = c.t, quem = disp(c.id).slice().sort((a, b) => mesmoNome(a.nome, state.nome) ? -1 : mesmoNome(b.nome, state.nome) ? 1 : a.nome.localeCompare(b.nome));
+            const nomes = quem.slice(0, MAX).map(r => {
+              const k = c.id + "|" + slug(r.nome); calNomesVistos.add(k);
+              const eu = mesmoNome(r.nome, state.nome);
+              return h("span", { class: "cn" + (eu ? " me" : "") + (calmo && vistosAntes.size && !vistosAntes.has(k) ? " novo" : ""), title: r.nome }, eu ? "Você" : primeiroNome(r.nome));
+            });
+            quem.slice(MAX).forEach(r => calNomesVistos.add(c.id + "|" + slug(r.nome)));
+            return h("span", { class: "mc", style: `--c:${t.cor}` },
+              h("span", { class: "mh" }, c.extra ? (t.hora ? `${t.hora} ${t.nome}` : t.nome) : t.hora || t.curto),
+              h("span", { class: "nms" }, nomes.length ? nomes : h("span", { class: "nada" }, "ninguém")),
+              quem.length > MAX ? h("span", { class: "mais" }, `+${quem.length - MAX}`) : null);
+          })));
+      }
+      // Faixas largas: dias com culto fora de domingo, segunda e quarta (sexta do Sobrenatural, eventos).
+      const inicioSem = Math.min(...Object.values(sem)), dIni = inicioSem - ((primeiro + inicioSem - 1) % 7);
+      for (let d = Math.max(1, dIni); d <= Math.min(total, dIni + 6); d++) {
+        const dia = porDia.get(d); if (!dia || [0, 1, 3].includes(dia.dow)) continue;
+        const isHoje = ano === hoje.getFullYear() && mes === hoje.getMonth() && d === hoje.getDate();
+        i++;
+        cells.push(h("button", { class: "mcell has faixa" + (d === state.diaSel ? " sel" : "") + (isHoje ? " today" : ""), style: `--i:${i}`,
+            "aria-label": `${DOW_LONG[dia.dow]}, ${d}: ` + dia.cultos.map(c => `${c.t.nome}: ${disp(c.id).map(r => r.nome).join(", ") || "ninguém"}`).join("; "),
+            "aria-pressed": String(d === state.diaSel),
+            onclick: () => { state.diaSel = d; vibrar(8); const y = window.scrollY; telaCalendario(true); window.scrollTo({ top: y }); document.getElementById("detalhe")?.scrollIntoView({ behavior: "smooth", block: "nearest" }); } },
+          h("span", { class: "n" }, `${DOW_LONG[dia.dow].replace("-feira", "")} ${pad(d)}`),
+          h("span", { class: "faixa-cultos" }, dia.cultos.map(c => {
+            const quem = disp(c.id).slice().sort((a, b) => mesmoNome(a.nome, state.nome) ? -1 : mesmoNome(b.nome, state.nome) ? 1 : a.nome.localeCompare(b.nome));
+            const nomes = quem.map(r => {
+              const k = c.id + "|" + slug(r.nome); const novo = calmo && vistosAntes.size && !vistosAntes.has(k); calNomesVistos.add(k);
+              const eu = mesmoNome(r.nome, state.nome);
+              return h("span", { class: "cn" + (eu ? " me" : "") + (novo ? " novo" : ""), title: r.nome }, eu ? "Você" : primeiroNome(r.nome));
+            });
+            return h("span", { class: "mc", style: `--c:${c.t.cor}` }, h("span", { class: "mh" }, c.t.hora ? `${c.t.hora} · ${c.t.nome}` : c.t.nome),
+              h("span", { class: "nms" }, nomes.length ? nomes : h("span", { class: "nada" }, "ninguém")));
+          }))));
+      }
     }
     const tiposMes = ORDEM.filter(t => dias.some(d => d.cultos.some(c => c.tipo === t)));
-    const grade = h("div", { class: "cal-wrap" }, h("div", { class: "cal" }, cells),
-      h("div", { class: "legend" }, tiposMes.map(t => h("span", { style: `--c:${TIPOS[t].cor}` }, h("i"), TIPOS[t].hora ? `${TIPOS[t].curto} ${TIPOS[t].hora}` : TIPOS[t].curto)),
-        h("span", {}, "nº = pessoas disponíveis"),
-        h("span", { class: "pill me", style: "--c:var(--gold-hi);font-weight:500;color:var(--muted)" }, h("i"), "você marcou")));
+    const grade = h("div", { class: "cal-wrap" }, h("div", { class: "mcal" }, cells),
+      h("div", { class: "legend" }, tiposMes.map(t => h("span", { style: `--c:${TIPOS[t].cor}` }, h("i"), TIPOS[t].hora ? `${TIPOS[t].hora} ${TIPOS[t].curto}` : t === "evento" ? "Eventos especiais" : TIPOS[t].nome)),
+        h("span", {}, "Toque no dia para ver todos os detalhes")));
     const dia = porDia.get(state.diaSel);
     corpo = [grade, dia ? h("div", { class: "detail", id: "detalhe" },
       h("h3", {}, `${DOW_LONG[dia.dow]}, `, h("span", {}, `${dia.d} de ${MESES[mes].toLowerCase()}`)),
       dia.cultos.map(c => cartaoCulto(c, resp))) : null];
+    if (!dias.length) corpo.push(h("div", { class: "empty" }, h("b", {}, "Nenhum culto neste mês"), "O administrador ainda não definiu os cultos deste mês."));
   } else {
     corpo = [h("div", { style: "display:flex;flex-direction:column;gap:10px" },
       dias.map((dia, i) => h("div", { class: "list-day", style: `--i:${Math.min(i, 12)}` },
@@ -965,7 +1161,7 @@ function pessoa(nome, extra = "", contador) {
     contador != null ? h("small", { style: "opacity:.7;font-variant-numeric:tabular-nums" }, `· ${contador}`) : null);
 }
 function cartaoCulto(c, resp) {
-  const t = TIPOS[c.tipo];
+  const t = c.t;
   const sim = resp.filter(r => r.cultos.includes(c.id));
   const nao = resp.filter(r => !r.cultos.includes(c.id));
   return h("div", { class: "culto-card", style: `--c:${t.cor}` }, h("span", { class: "stripe" }),
@@ -980,7 +1176,7 @@ async function copiarResumo(dias, resp, faltam) {
   for (const dia of dias) {
     L.push("", `*${DOW[dia.dow]} ${pad(dia.d)}/${pad(mes + 1)}*`);
     for (const c of dia.cultos) {
-      const t = TIPOS[c.tipo], sim = resp.filter(r => r.cultos.includes(c.id)).map(r => r.nome);
+      const t = c.t, sim = resp.filter(r => r.cultos.includes(c.id)).map(r => r.nome);
       L.push(`• ${t.nome}${t.hora ? " " + t.hora : ""} (${sim.length}): ${sim.join(", ") || "ninguém"}`);
     }
   }
@@ -1006,6 +1202,7 @@ function telaUsuario(calmo = false) {
       h("h2", {}, state.nome),
       h("p", {}, cargo(state.nome) || "Obreiro", " · ", CONFIG.igreja)),
     h("button", { class: "btn btn-gold btn-block", onclick: trocarUsuario }, svg(ICON.swap), "Trocar usuário"),
+    painelAdmin(),
     h("div", { class: "panel" },
       h("div", { class: "kv" },
         h("div", {}, h("span", {}, `Resposta de ${MESES[mes].toLowerCase()}`), h("b", {}, minha ? `${minha.cultos.length} cultos` : "Ainda não respondeu")),
@@ -1018,6 +1215,136 @@ function telaUsuario(calmo = false) {
         ["Domingo 10:15", "1º Culto de Celebração"], ["Domingo 18:30", "2º Culto de Celebração"], ["Última sexta do mês", "Culto do Sobrenatural"],
       ].map(([a, b]) => h("div", {}, h("span", {}, a), h("b", {}, b))))),
     h("p", { class: "foot" }, "ASSEMBLEIA DE DEUS VITÓRIA EM CRISTO")));
+}
+function painelAdmin() {
+  if (state.admin) {
+    return h("div", { class: "panel admin-on" },
+      h("div", { class: "admin-head" }, svg(ICON.shield), h("div", {}, h("b", {}, "Modo administrador ativo"), h("span", {}, "Você pode tirar cultos e criar eventos."))),
+      h("button", { class: "btn btn-gold btn-block", onclick: () => { state.tab = "admin"; render(); } }, svg(ICON.cal), "Gerenciar cultos e eventos"),
+      h("button", { class: "btn btn-ghost btn-sm", onclick: async () => { await backend.admin.sair().catch(() => {}); state.admin = false; toast("Você saiu do modo administrador"); telaUsuario(true); } }, "Sair do modo administrador"));
+  }
+  const inp = h("input", { class: "input", id: "senha-admin", type: "password", placeholder: "Senha do administrador", autocomplete: "current-password" });
+  const msg = h("p", { class: "adm-msg", role: "alert" });
+  const btn = h("button", { class: "btn btn-ghost btn-block", type: "submit" }, svg(ICON.shield), "Entrar como administrador");
+  const form = h("form", { class: "panel", onsubmit: async e => {
+    e.preventDefault();
+    if (!inp.value) { inp.focus(); return; }
+    btn.disabled = true; msg.textContent = "Conferindo a senha…";
+    try {
+      await backendPronto;
+      await comTempo(backend.admin.entrar(inp.value), 20000);
+      state.admin = true; vibrar(20); toast("Bem-vindo, administrador!");
+      state.tab = "admin"; render();
+    } catch (err) {
+      const c = err && err.code || "";
+      msg.textContent = c === "senha" || c === "auth/invalid-credential" || c === "auth/wrong-password" || c === "auth/invalid-login-credentials" || c === "auth/user-not-found" ? "Senha incorreta."
+        : c === "auth/operation-not-allowed" || c === "auth/configuration-not-found" ? "O login do administrador ainda não foi ativado no Firebase."
+        : c === "auth/too-many-requests" ? "Muitas tentativas. Espere alguns minutos e tente de novo."
+        : "Não consegui conferir a senha. Confira a internet e tente de novo.";
+      btn.disabled = false; inp.select();
+    }
+  } },
+    h("p", { class: "section-label" }, "Administrador"),
+    h("label", { class: "small", for: "senha-admin" }, "Para tirar cultos ou adicionar eventos no mês, entre com a senha:"),
+    inp, msg, btn);
+  return form;
+}
+
+/* ===================== ADMINISTRADOR: CULTOS E EVENTOS ===================== */
+let confirmarRestaurar = 0;
+function telaAdmin(calmo = false) {
+  const { ano, mes, ym } = mesAtual();
+  const total = new Date(ano, mes + 1, 0).getDate();
+  const aj = ajustesDo(ym), fora = new Set(aj.removidos);
+  const resp = state.dados[ym]?.respostas || [];
+  const marcaram = id => resp.filter(r => r.cultos.includes(id)).length;
+  const padrao = cultosPadrao(ano, mes);
+  const ativos = cultosDoMes(ano, mes).reduce((s, d) => s + d.cultos.length, 0);
+
+  // junta habituais (inclusive retirados) e eventos, por dia
+  const dias = new Map();
+  for (const d of padrao) dias.set(d.d, d.cultos.map(c => ({ c, padrao: true })));
+  for (const e of aj.extras) {
+    const d = +String(e.data).slice(8, 10); if (!String(e.data).startsWith(ym + "-")) continue;
+    if (!dias.has(d)) dias.set(d, []);
+    dias.get(d).push({ c: eventoComoCulto(e, ano, mes), padrao: false, e });
+  }
+  const ordenados = [...dias.entries()].sort((a, b) => a[0] - b[0]);
+
+  const selDia = h("select", { class: "input", id: "ev-dia", "aria-label": "Dia do evento" },
+    Array.from({ length: total }, (_, i) => { const d = i + 1, dow = new Date(ano, mes, d).getDay();
+      return h("option", { value: `${ym}-${pad(d)}` }, `${DOW[dow]} ${pad(d)}/${pad(mes + 1)}`); }));
+  const proximoSab = Array.from({ length: total }, (_, i) => i + 1).find(d => new Date(ano, mes, d).getDay() === 6);
+  if (proximoSab) selDia.value = `${ym}-${pad(proximoSab)}`;
+  const nome = h("input", { class: "input", id: "ev-nome", placeholder: "Ex.: Culto de Natal, Vigília, Conferência", maxlength: "40" });
+  const hora = h("input", { class: "input", id: "ev-hora", type: "time", "aria-label": "Horário (opcional)" });
+  const addForm = h("form", { class: "panel", onsubmit: async e => {
+    e.preventDefault();
+    const n = nome.value.trim().replace(/\s+/g, " ");
+    if (!n) { nome.focus(); toast("Dê um nome ao evento."); return; }
+    const id = `${selDia.value}-ev${Math.random().toString(36).slice(2, 8)}`;
+    await gravarAjustes(ym, { ...aj, extras: [...aj.extras, { id, data: selDia.value, nome: n, hora: hora.value || "" }] }, `Evento "${n}" adicionado`);
+  } },
+    h("p", { class: "section-label" }, "Adicionar culto ou evento"),
+    h("div", { class: "add-ev" }, selDia, hora),
+    nome,
+    h("button", { class: "btn btn-gold btn-block", type: "submit" }, svg(ICON.plus), "Adicionar ao mês"));
+
+  const lista = h("div", { class: "adm-list" }, ordenados.map(([d, itens], i) => {
+    const dow = new Date(ano, mes, d).getDay();
+    return h("div", { class: "adm-day", style: `--i:${Math.min(i, 12)}` },
+      h("h4", {}, `${DOW_LONG[dow]}, ${pad(d)}/${pad(mes + 1)}`),
+      itens.map(({ c, padrao, e }) => {
+        const on = padrao ? !fora.has(c.id) : true, n = marcaram(c.id);
+        return h("div", { class: "adm-row" + (on ? "" : " off"), style: `--c:${c.t.cor}` },
+          h("span", { class: "stripe" }),
+          h("div", { class: "t" }, h("b", {}, c.t.nome), h("small", {},
+            c.t.hora ? h("em", {}, c.t.hora) : null,
+            padrao ? (on ? "Habitual" : "Retirado deste mês") : "Evento especial",
+            n ? ` · ${n} ${n === 1 ? "marcou" : "marcaram"}` : "")),
+          padrao
+            ? h("button", { class: "sw", role: "switch", "aria-checked": String(on), "aria-label": `${c.t.nome} em ${pad(d)}/${pad(mes + 1)}`,
+                onclick: () => {
+                  const rem = new Set(aj.removidos); on ? rem.add(c.id) : rem.delete(c.id);
+                  gravarAjustes(ym, { ...aj, removidos: [...rem] }, on ? `${c.t.nome} do dia ${pad(d)} retirado` : `${c.t.nome} do dia ${pad(d)} voltou`);
+                } }, h("i"))
+            : h("button", { class: "icon-btn danger", "aria-label": `Excluir ${c.t.nome}`,
+                onclick: () => gravarAjustes(ym, { ...aj, extras: aj.extras.filter(x => x.id !== e.id) }, `Evento "${c.t.nome}" excluído`) }, svg(ICON.trash)));
+      }));
+  }));
+
+  const mudado = aj.removidos.length || aj.extras.length;
+  const restaurar = h("button", { class: "btn btn-ghost btn-block" + (confirmarRestaurar > Date.now() ? " warn" : ""), disabled: !mudado, onclick: () => {
+    if (confirmarRestaurar > Date.now()) { confirmarRestaurar = 0; gravarAjustes(ym, { removidos: [], extras: [] }, "Mês voltou aos dias habituais"); }
+    else { confirmarRestaurar = Date.now() + 4000; telaAdmin(true); setTimeout(() => { if (state.tab === "admin") telaAdmin(true); }, 4100); }
+  } }, svg(ICON.refresh), confirmarRestaurar > Date.now() ? "Toque de novo para confirmar" : "Voltar aos dias habituais");
+
+  app.replaceChildren(h("section", { class: "screen" + (calmo ? " calm" : "") },
+    topbar("Cultos e eventos"),
+    h("div", { class: "summary wide" }, h("div", {},
+      h("div", { class: "month" }, h("h2", {}, MESES[mes] + " ", h("span", {}, String(ano))), navMes()),
+      h("p", {}, `${ativos} cultos e eventos neste mês. Os dias habituais já vêm prontos: desligue o que não vai acontecer e adicione o que for diferente. Os obreiros veem as mudanças na hora.`))),
+    addForm,
+    h("p", { class: "section-label" }, "Cultos do mês"),
+    lista,
+    restaurar,
+    h("button", { class: "btn btn-ghost btn-sm", onclick: () => { state.tab = "usuario"; render(); } }, svg(ICON.left), "Voltar")));
+}
+async function gravarAjustes(ym, aj, msg) {
+  const antes = state.dados[ym]?.eventos;
+  const limpo = { removidos: [...new Set(aj.removidos)].slice(0, 100), extras: aj.extras.slice(0, 40).map(e => ({ id: e.id, data: e.data, nome: e.nome, hora: e.hora || "" })), atualizado: new Date().toISOString() };
+  (state.dados[ym] ||= { status: "ok", respostas: [] }).eventos = limpo;
+  const y = window.scrollY; telaAdmin(true); window.scrollTo({ top: y });
+  try {
+    await backendPronto;
+    await comTempo(backend.salvarEventos(ym, limpo));
+    vibrar(15); toast(msg);
+  } catch (e) {
+    if (e && e.code === "tempo" && backend?.modo === "firebase") { toast("Sem internet: a mudança será enviada quando a conexão voltar."); return; }
+    state.dados[ym].eventos = antes || {};
+    telaAdmin(true); window.scrollTo({ top: y });
+    toast(e && e.code === "permission-denied" ? "O Firebase recusou: entre de novo como administrador." : "Não foi possível salvar. Tente de novo.");
+  }
 }
 function trocarUsuario() {
   if (state.dirty) guardarRascunho();
@@ -1051,7 +1378,10 @@ function confete() {
 
 /* ---------- início ---------- */
 if (state.nome) { lerRascunho(); render(); carregarMes(mesAtual().ym); } else render();
-backendPronto.then(() => { if (state.nome && state.tab === "usuario") telaUsuario(true); });
+backendPronto.then(async () => {
+  try { state.admin = await backend.admin.restaurar(); } catch (e) { state.admin = false; }
+  if (state.nome && state.tab === "usuario") telaUsuario(true);
+});
 </script>
 
 </body>
