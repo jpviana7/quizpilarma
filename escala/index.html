@@ -314,6 +314,11 @@ label.small { font-size: 13px; color: var(--muted); }
 .empty { text-align: center; padding: 22px 12px; color: var(--muted); font-size: 14px; }
 .empty b { display: block; color: var(--ink); font: 700 16px var(--font-display); margin-bottom: 4px; }
 
+.live { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 12.5px; color: var(--ok); }
+.live i { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 rgba(123,224,176,.6); animation: livePulse 1.8s ease-out infinite; }
+@keyframes livePulse { 70% { box-shadow: 0 0 0 8px rgba(123,224,176,0); } 100% { box-shadow: 0 0 0 0 rgba(123,224,176,0); } }
+.calm.screen, .calm .cell, .calm .list-day, .calm .detail, .calm .profile .big { animation: none; }
+
 /* ---------- Usuário ---------- */
 .profile { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 26px 16px; border-radius: var(--r-lg); background: linear-gradient(160deg, rgba(19,48,112,.95), rgba(10,31,74,.95)); border: 1px solid var(--line); }
 .profile .big { width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; font: 800 30px var(--font-display); background: var(--grad-gold); color: var(--on-gold); box-shadow: 0 0 0 4px var(--bg), 0 0 0 6px rgba(217,178,95,.5), 0 14px 40px -10px rgba(217,178,95,.6); animation: pop .6s var(--ease); }
@@ -375,9 +380,16 @@ label.small { font-size: 13px; color: var(--muted); }
    Ajuste aqui sem mexer no resto do app. */
 const CONFIG = {
   igreja: "ADVEC",
-  // Endereço do "App da Web" do Google Apps Script ligado à planilha (termina em /exec).
-  // Enquanto estiver vazio, as respostas ficam só no aparelho (modo de teste).
-  planilhaUrl: "",
+  // Projeto Firebase onde as respostas ficam guardadas (Firestore, em tempo real).
+  // Essas chaves são públicas por natureza; quem protege os dados são as regras do Firestore.
+  firebase: {
+    apiKey: "AIzaSyC0BxqGcsxLes62jYILI8rzJDjVpZwzF8A",
+    authDomain: "aplicativo-escala-de-obreiros.firebaseapp.com",
+    projectId: "aplicativo-escala-de-obreiros",
+    storageBucket: "aplicativo-escala-de-obreiros.firebasestorage.app",
+    messagingSenderId: "394958677291",
+    appId: "1:394958677291:web:2d70ca9a46fed6c25f516e",
+  },
   obreiros: [
     "Dc. Bezerra", "Dc. David", "Dc. Francisco", "Dc. Josival", "Dc. Maicon", "Dc. Victor",
     "Ob. Alex", "Ob. Augusto", "Ob. Edmilson", "Ob. Gerson", "Ob. Matheus", "Ob. Rofferson",
@@ -419,62 +431,81 @@ function cultosDoMes(ano, mes) {
 }
 
 /* ===================== ARMAZENAMENTO =====================
-   Três formas de guardar, escolhidas sozinhas:
+   Escolhido sozinho:
    1) Dentro do Claude (prévia): banco do próprio artifact.
-   2) Planilha Google (CONFIG.planilhaUrl): todos veem as respostas de todos.
-   3) Só neste aparelho: modo de teste. */
+   2) Firebase (CONFIG.firebase): todos veem as respostas de todos, ao vivo.
+   3) Só neste aparelho: quando nada acima estiver disponível.
+   Cada backend tem: observar(ym, aoReceber, aoFalhar) -> parar, salvar(resposta), addNome(nome). */
 const local = {
   get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
   del(k) { try { localStorage.removeItem(k); } catch (e) {} },
 };
-const slug = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "x";
+const slug = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "x";
 const mesmoNome = (a, b) => slug(a) === slug(b);
-function comTempo(p, ms = 15000) { return Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error("tempo")), ms))]); }
+function comTempo(p, ms = 15000) { return Promise.race([p, new Promise((_, r) => setTimeout(() => r(Object.assign(new Error("tempo"), { code: "tempo" })), ms))]); }
+function juntar(cb) {
+  let rs = null, os = null;
+  return {
+    respostas(v) { rs = v; if (os) cb({ respostas: rs, obreiros: os }); },
+    obreiros(v) { os = v; if (rs) cb({ respostas: rs, obreiros: os }); },
+  };
+}
 
 function backendLocal() {
   const K = "advec:banco-local";
   const ler = () => local.get(K) || { respostas: {}, obreiros: [] };
+  const ouvintes = new Set();
+  const avisar = () => ouvintes.forEach(f => f());
   return {
-    modo: "local", compartilhado: false,
-    async carregar(ym) {
-      const b = ler();
-      return { respostas: Object.values(b.respostas[ym] || {}), obreiros: b.obreiros };
+    modo: "local", compartilhado: false, aoVivo: false,
+    observar(ym, cb) {
+      const f = () => { const b = ler(); cb({ respostas: Object.values(b.respostas[ym] || {}), obreiros: b.obreiros }); };
+      ouvintes.add(f); setTimeout(f, 0);
+      return () => ouvintes.delete(f);
     },
-    async salvar(r) {
-      const b = ler(); (b.respostas[r.mes] ||= {})[slug(r.nome)] = r; local.set(K, b);
-    },
-    async addNome(nome) { const b = ler(); if (!b.obreiros.some(n => mesmoNome(n, nome))) b.obreiros.push(nome); local.set(K, b); },
+    async salvar(r) { const b = ler(); (b.respostas[r.mes] ||= {})[slug(r.nome)] = r; local.set(K, b); avisar(); },
+    async addNome(nome) { const b = ler(); if (!b.obreiros.some(n => mesmoNome(n, nome))) b.obreiros.push(nome); local.set(K, b); avisar(); },
   };
 }
 function backendArtifact(db) {
   return {
-    modo: "artifact", compartilhado: true,
-    async carregar(ym) {
-      const [rs, os] = await Promise.all([
-        db.collection("respostas").where("mes", "==", ym).get(),
-        db.collection("obreiros").get(),
-      ]);
-      return { respostas: rs.docs.map(d => d.data()), obreiros: os.docs.map(d => String(d.data().nome || "")).filter(Boolean) };
+    modo: "artifact", compartilhado: true, aoVivo: true,
+    observar(ym, cb, falha) {
+      const j = juntar(cb);
+      const u1 = db.collection("respostas").where("mes", "==", ym).onSnapshot(s => j.respostas(s.docs.map(d => d.data())), falha);
+      const u2 = db.collection("obreiros").onSnapshot(s => j.obreiros(s.docs.map(d => String(d.data().nome || "")).filter(Boolean)), falha);
+      return () => { u1(); u2(); };
     },
-    async salvar(r) { await db.doc(`respostas/${r.mes}_${slug(r.nome)}`).set(r); },
-    async addNome(nome) { await db.doc(`obreiros/${slug(nome)}`).set({ nome }); },
+    salvar: r => db.doc(`respostas/${r.mes}_${slug(r.nome)}`).set(r),
+    addNome: nome => db.doc(`obreiros/${slug(nome)}`).set({ nome }),
   };
 }
-function backendPlanilha(url) {
-  const post = async corpo => {
-    const res = await comTempo(fetch(url, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(corpo) }));
-    const j = await res.json(); if (j.erro) throw new Error(j.erro); return j;
-  };
+function carregarScript(src) {
+  return new Promise((ok, falha) => {
+    const el = document.createElement("script");
+    el.src = src; el.onload = ok; el.onerror = () => falha(new Error("Não carregou " + src));
+    document.head.append(el);
+  });
+}
+async function backendFirebase(cfg) {
+  const base = "https://www.gstatic.com/firebasejs/10.12.2/";
+  if (!window.firebase) await carregarScript(base + "firebase-app-compat.js");
+  if (!window.firebase.firestore) await carregarScript(base + "firebase-firestore-compat.js");
+  if (!firebase.apps.length) firebase.initializeApp(cfg);
+  const fs = firebase.firestore();
+  // Guarda uma cópia no aparelho: abre rápido e funciona sem internet (envia quando voltar).
+  try { await fs.enablePersistence({ synchronizeTabs: true }); } catch (e) {}
   return {
-    modo: "planilha", compartilhado: true,
-    async carregar(ym) {
-      const res = await comTempo(fetch(`${url}?acao=dados&mes=${encodeURIComponent(ym)}&t=${Date.now()}`));
-      const j = await res.json(); if (j.erro) throw new Error(j.erro);
-      return { respostas: j.respostas || [], obreiros: j.obreiros || [] };
+    modo: "firebase", compartilhado: true, aoVivo: true,
+    observar(ym, cb, falha) {
+      const j = juntar(cb);
+      const u1 = fs.collection("respostas").where("mes", "==", ym).onSnapshot(s => j.respostas(s.docs.map(d => d.data())), falha);
+      const u2 = fs.collection("obreiros").onSnapshot(s => j.obreiros(s.docs.map(d => String(d.data().nome || "")).filter(Boolean)), falha);
+      return () => { u1(); u2(); };
     },
-    salvar: r => post({ acao: "salvar", ...r }),
-    addNome: nome => post({ acao: "addObreiro", nome }),
+    salvar: r => fs.doc(`respostas/${r.mes}_${slug(r.nome)}`).set(r),
+    addNome: nome => fs.doc(`obreiros/${slug(nome)}`).set({ nome }),
   };
 }
 let backend = null;
@@ -482,7 +513,9 @@ const backendPronto = (async () => {
   if (window.claude && typeof window.claude.use === "function") {
     try { const db = await window.claude.use("db"); if (db) return (backend = backendArtifact(db)); } catch (e) {}
   }
-  if (CONFIG.planilhaUrl) return (backend = backendPlanilha(CONFIG.planilhaUrl));
+  if (CONFIG.firebase && CONFIG.firebase.projectId) {
+    try { return (backend = await comTempo(backendFirebase(CONFIG.firebase), 20000)); } catch (e) {}
+  }
   return (backend = backendLocal());
 })();
 
@@ -515,19 +548,44 @@ function todosNomes() {
 }
 function minhaResposta(ym) { return (state.dados[ym]?.respostas || []).find(r => mesmoNome(r.nome, state.nome)); }
 
-async function carregarMes(ym, { silencioso = false } = {}) {
+let assinatura = { ym: null, parar: null };
+function carregarMes(ym, { forcar = false } = {}) {
+  if (assinatura.ym === ym && !forcar) return;
+  if (assinatura.parar) assinatura.parar();
+  assinatura = { ym, parar: null };
   const atual = state.dados[ym];
-  if (!silencioso || !atual) state.dados[ym] = { ...(atual || {}), status: "carregando", respostas: atual?.respostas || [] };
+  state.dados[ym] = { status: atual?.status === "ok" && !forcar ? "ok" : "carregando", respostas: atual?.respostas || [], erro: "" };
   aoMudarDados(ym);
-  try {
-    await backendPronto;
-    const r = await comTempo(backend.carregar(ym));
-    const extras = r.obreiros.filter(n => !CONFIG.obreiros.some(x => mesmoNome(x, n)));
-    state.extras = [...new Set([...state.extras, ...extras])]; local.set("advec:extras", state.extras);
-    state.dados[ym] = { status: "ok", respostas: r.respostas.map(x => ({ nome: String(x.nome || ""), cultos: Array.isArray(x.cultos) ? x.cultos.map(String) : [], obs: String(x.obs || ""), atualizado: x.atualizado || "" })).filter(x => x.nome) };
-  } catch (e) {
-    state.dados[ym] = { status: "erro", respostas: atual?.respostas || [] };
+  backendPronto.then(() => {
+    if (assinatura.ym !== ym) return;
+    const relogio = setTimeout(() => {
+      const d = state.dados[ym];
+      if (assinatura.ym === ym && d.status === "carregando") { d.status = "erro"; d.erro = "tempo"; aoMudarDados(ym); }
+    }, 12000);
+    assinatura.parar = backend.observar(ym,
+      r => { clearTimeout(relogio); if (assinatura.ym === ym) aplicarDados(ym, r); },
+      e => {
+        clearTimeout(relogio);
+        const d = state.dados[ym]; d.status = "erro"; d.erro = e && e.code || "erro";
+        if (assinatura.ym === ym) assinatura = { ym: null, parar: null }; // permite tentar de novo
+        aoMudarDados(ym);
+      });
+  });
+}
+function aplicarDados(ym, r) {
+  const extras = r.obreiros.filter(n => !CONFIG.obreiros.some(x => mesmoNome(x, n)));
+  state.extras = [...new Set([...state.extras, ...extras])]; local.set("advec:extras", state.extras);
+  const antes = state.dados[ym];
+  const novas = r.respostas
+    .map(x => ({ nome: String(x.nome || ""), cultos: Array.isArray(x.cultos) ? x.cultos.map(String) : [], obs: String(x.obs || ""), atualizado: String(x.atualizado || "") }))
+    .filter(x => x.nome);
+  // Avisa quando outra pessoa salvou enquanto o calendário está aberto.
+  if (antes?.status === "ok" && state.tab === "calendario" && state.nome) {
+    const mudou = novas.filter(n => !mesmoNome(n.nome, state.nome) && !antes.respostas.some(a => mesmoNome(a.nome, n.nome) && a.atualizado === n.atualizado));
+    if (mudou.length === 1) toast(`${mudou[0].nome} atualizou a disponibilidade`);
+    else if (mudou.length > 1) toast(`${mudou.length} obreiros atualizaram a disponibilidade`);
   }
+  state.dados[ym] = { status: "ok", respostas: novas, erro: "" };
   aoMudarDados(ym);
 }
 
@@ -598,12 +656,11 @@ function trocarMes(delta) {
 tabbar.addEventListener("click", e => { const b = e.target.closest(".tab"); if (b) irPara(b.dataset.tab); });
 function irPara(tab) {
   if (tab === state.tab) { window.scrollTo({ top: 0, behavior: "smooth" }); return; }
-  state.tab = tab; vibrar(8); render();
-  if (tab !== "usuario") carregarMes(mesAtual().ym, { silencioso: true });
+  state.tab = tab; vibrar(8); render(); carregarMes(mesAtual().ym);
 }
 function render() {
   dockSlot.replaceChildren();
-  if (!state.nome) { tabbar.hidden = true; app.classList.add("no-tabs"); telaNome(); window.scrollTo({ top: 0 }); carregarMes(mesAtual().ym, { silencioso: true }); return; }
+  if (!state.nome) { tabbar.hidden = true; app.classList.add("no-tabs"); telaNome(); window.scrollTo({ top: 0 }); carregarMes(mesAtual().ym); return; }
   tabbar.hidden = false; app.classList.remove("no-tabs");
   const idx = ["agenda", "calendario", "usuario"].indexOf(state.tab);
   tabbar.querySelectorAll(".tab").forEach((b, i) => b.setAttribute("aria-selected", String(i === idx)));
@@ -617,7 +674,8 @@ function aoMudarDados(ym) {
   if (!state.nome) { if (state.dados[ym]?.status !== "carregando" && todosNomes().length !== nomesNaTela) { const y = window.scrollY; telaNome(); window.scrollTo({ top: y }); } return; }
   if (ym !== mesAtual().ym) return;
   if (state.tab === "agenda") sincronizarAgenda();
-  else if (state.tab === "calendario") { const y = window.scrollY; telaCalendario(); window.scrollTo({ top: y }); }
+  else if (state.tab === "calendario") { const y = window.scrollY; telaCalendario(true); window.scrollTo({ top: y }); }
+  else if (state.tab === "usuario") telaUsuario(true);
 }
 
 /* ===================== TELA: QUEM É VOCÊ ===================== */
@@ -797,7 +855,15 @@ async function salvar() {
     confete(); vibrar([20, 40, 20]);
     toast(resp.cultos.length ? "Disponibilidade salva! Deus abençoe." : "Salvo: você não está disponível este mês.");
   } catch (e) {
-    toast("Não foi possível salvar. Confira a internet e tente de novo.");
+    if (e && e.code === "tempo" && backend?.modo === "firebase") {
+      // Firestore guardou no aparelho e envia sozinho quando a internet voltar.
+      state.dirty = false; guardarRascunho();
+      toast("Sem internet agora. Sua resposta será enviada quando a conexão voltar.");
+    } else if (e && e.code === "permission-denied") {
+      toast("O Firebase recusou. Peça ao líder para publicar as regras do Firestore.");
+    } else {
+      toast("Não foi possível salvar. Confira a internet e tente de novo.");
+    }
   } finally {
     ui.sendBtn.disabled = false; ui.sendIcon.replaceWith(ui.sendIcon = svg(ICON.save)); atualizarAgenda(false);
   }
@@ -808,7 +874,7 @@ function resumoPessoa(r) {
 }
 
 /* ===================== ABA: CALENDÁRIO GERAL ===================== */
-function telaCalendario() {
+function telaCalendario(calmo = false) {
   const { ano, mes, ym } = mesAtual();
   const dias = cultosDoMes(ano, mes);
   const porDia = new Map(dias.map(d => [d.d, d]));
@@ -824,12 +890,13 @@ function telaCalendario() {
     state.diaSel = (ehMesAtual && dias.find(d => d.d >= hoje.getDate()) || dias[0])?.d;
   }
 
-  const atualizar = h("button", { class: "icon-btn", "aria-label": "Atualizar respostas", onclick: () => carregarMes(ym) },
+  const atualizar = h("button", { class: "icon-btn", "aria-label": "Atualizar respostas", onclick: () => carregarMes(ym, { forcar: true }) },
     dado.status === "carregando" ? h("span", { class: "spinner", style: "width:15px;height:15px" }) : svg(ICON.refresh));
 
   const resumo = h("div", { class: "summary wide" },
     h("div", {},
       h("div", { class: "month" }, h("h2", {}, MESES[mes] + " ", h("span", {}, String(ano))), h("div", { class: "arrows" }, atualizar, navMes())),
+      backend?.aoVivo && dado.status === "ok" ? h("div", { class: "live" }, h("i"), "Ao vivo: muda sozinho quando alguém salva") : null,
       h("div", { class: "stats" },
         h("div", { class: "stat" }, h("b", {}, String(responderam.length)), h("span", {}, responderam.length === 1 ? "respondeu" : "responderam")),
         h("div", { class: "stat pend" }, h("b", {}, String(faltam.length)), h("span", {}, faltam.length === 1 ? "falta responder" : "faltam responder")),
@@ -837,8 +904,10 @@ function telaCalendario() {
 
   const avisos = [];
   if (!backend || !backend.compartilhado) avisos.push(h("div", { class: "banner" }, svg(ICON.info),
-    h("span", {}, "Modo de teste: as respostas ficam só neste celular. Quando a planilha da igreja for conectada, todos verão as respostas de todos.")));
-  if (dado.status === "erro") avisos.push(h("div", { class: "banner" }, svg(ICON.info), h("span", {}, "Não consegui buscar as respostas agora. Confira a internet e toque em atualizar.")));
+    h("span", {}, "Sem conexão com o banco da igreja: as respostas estão ficando só neste celular. Confira a internet e abra o app de novo.")));
+  if (dado.status === "erro") avisos.push(h("div", { class: "banner" }, svg(ICON.info), h("span", {}, dado.erro === "permission-denied"
+    ? "O Firebase recusou o acesso. Publique as regras do Firestore (arquivo firestore.rules) no console do Firebase."
+    : "Não consegui buscar as respostas agora. Confira a internet e toque em atualizar.")));
 
   const segBox = h("div", { class: "seg" + (state.calView === "lista" ? " right" : "") }, h("span", { class: "knob" }),
     h("button", { "aria-pressed": String(state.calView === "cal"), onclick: () => { state.calView = "cal"; telaCalendario(); } }, "Calendário"),
@@ -856,7 +925,7 @@ function telaCalendario() {
       cells.push(h("button", { class: "cell has" + (d === state.diaSel ? " sel" : "") + (isHoje ? " today" : ""), style: `--i:${d}`,
           "aria-label": `${DOW_LONG[dia.dow]}, ${d}: ` + dia.cultos.map(c => `${TIPOS[c.tipo].nome}, ${disp(c.id).length} disponíveis`).join("; "),
           "aria-pressed": String(d === state.diaSel),
-          onclick: () => { state.diaSel = d; vibrar(8); telaCalendario(); document.getElementById("detalhe")?.scrollIntoView({ behavior: "smooth", block: "nearest" }); } },
+          onclick: () => { state.diaSel = d; vibrar(8); const y = window.scrollY; telaCalendario(true); window.scrollTo({ top: y }); document.getElementById("detalhe")?.scrollIntoView({ behavior: "smooth", block: "nearest" }); } },
         h("span", { class: "n" }, String(d)),
         dia.cultos.map(c => { const n = disp(c.id).length; const eu = state.sel.has(c.id) || disp(c.id).some(r => mesmoNome(r.nome, state.nome));
           return h("span", { class: "pill" + (n ? "" : " zero") + (eu ? " me" : ""), style: `--c:${TIPOS[c.tipo].cor}` }, h("i"), String(n)); })));
@@ -887,7 +956,7 @@ function telaCalendario() {
 
   const copiar = h("button", { class: "btn btn-ghost btn-block", onclick: () => copiarResumo(dias, resp, faltam) }, svg(ICON.copy), "Copiar resumo para a reunião");
 
-  app.replaceChildren(h("section", { class: "screen" }, topbar("Calendário geral"), resumo, avisos, segBox, corpo, painel, copiar));
+  app.replaceChildren(h("section", { class: "screen" + (calmo ? " calm" : "") }, topbar("Calendário geral"), resumo, avisos, segBox, corpo, painel, copiar));
 }
 function pessoa(nome, extra = "", contador) {
   const eu = mesmoNome(nome, state.nome);
@@ -926,11 +995,11 @@ async function copiarResumo(dias, resp, faltam) {
 }
 
 /* ===================== ABA: USUÁRIO ===================== */
-function telaUsuario() {
+function telaUsuario(calmo = false) {
   const { mes, ano, ym } = mesAtual();
   const minha = minhaResposta(ym);
-  const modo = !backend ? "Conectando…" : backend.modo === "planilha" ? "Planilha da igreja (todos veem)" : backend.modo === "artifact" ? "Banco compartilhado (prévia)" : "Só neste celular (teste)";
-  app.replaceChildren(h("section", { class: "screen" },
+  const modo = !backend ? "Conectando…" : backend.modo === "firebase" ? "Firebase da igreja (ao vivo)" : backend.modo === "artifact" ? "Banco compartilhado (prévia)" : "Só neste celular (teste)";
+  app.replaceChildren(h("section", { class: "screen" + (calmo ? " calm" : "") },
     topbar("Usuário"),
     h("div", { class: "profile" },
       h("div", { class: "big" }, iniciais(state.nome)),
@@ -982,7 +1051,7 @@ function confete() {
 
 /* ---------- início ---------- */
 if (state.nome) { lerRascunho(); render(); carregarMes(mesAtual().ym); } else render();
-backendPronto.then(() => { if (state.nome && state.tab !== "agenda") render(); });
+backendPronto.then(() => { if (state.nome && state.tab === "usuario") telaUsuario(true); });
 </script>
 
 </body>
