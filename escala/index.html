@@ -173,7 +173,8 @@ label.small { font-size: 13px; color: var(--muted); }
 .ring .val b { display: block; font: 800 24px/1 var(--font-display); color: var(--gold-hi); }
 .ring .val span { font-size: 11px; color: var(--muted); }
 .month { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.month h2 { margin: 0; font: 700 21px/1.2 var(--font-display); }
+.month h2 { margin: 0; font: 700 21px/1.2 var(--font-display); white-space: nowrap; }
+.month { flex-wrap: wrap; }
 .month h2 span { color: var(--gold); }
 .arrows { display: flex; gap: 6px; }
 .icon-btn { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: rgba(159,176,208,.08); border: 1px solid var(--line-soft); color: var(--ink); cursor: pointer; flex: none; }
@@ -387,6 +388,8 @@ label.small { font-size: 13px; color: var(--muted); }
 .sw i { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--ink); box-shadow: 0 2px 6px rgba(0,0,0,.4); transition: transform .35s var(--ease), background .3s; }
 .sw[aria-checked="true"] { background: var(--gold); border-color: var(--gold-hi); }
 .sw[aria-checked="true"] i { transform: translateX(20px); background: #fff8e1; }
+.img-btn { color: var(--gold-hi); border-color: rgba(217,178,95,.45); background: rgba(217,178,95,.12); }
+.img-btn .spinner { width: 15px; height: 15px; }
 .icon-btn.danger { color: #ffb3b3; border-color: rgba(255,140,140,.3); }
 .btn.warn { border-color: var(--warn); color: var(--warn); }
 
@@ -759,6 +762,7 @@ const ICON = {
   shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>',
   cal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4"/></svg>',
   trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>',
+  img: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>',
   check: '<svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="13"/><path d="M9 15.5l4 4 8-8.5"/></svg>',
 };
 const CARGOS = [[/^dc\.?\s*/i, "Diácono"], [/^ob\.?\s*/i, "Obreiro"], [/^pb\.?\s*/i, "Presbítero"], [/^pr\.?\s*/i, "Pastor"], [/^ev\.?\s*/i, "Evangelista"], [/^dca\.?\s*/i, "Diaconisa"], [/^miss\.?\s*/i, "Missionária"]];
@@ -1055,7 +1059,9 @@ function telaCalendario(calmo = false) {
 
   const resumo = h("div", { class: "summary wide" },
     h("div", {},
-      h("div", { class: "month" }, h("h2", {}, MESES[mes] + " ", h("span", {}, String(ano))), h("div", { class: "arrows" }, atualizar, navMes())),
+      h("div", { class: "month" }, h("h2", {}, MESES[mes] + " ", h("span", {}, String(ano))),
+        h("div", { class: "arrows" }, h("button", { class: "icon-btn img-btn", id: "gerar-imagem", "aria-label": "Gerar imagem do calendário (PNG)", title: "Gerar imagem", onclick: e => gerarImagem(e.currentTarget) }, svg(ICON.img)),
+          backend?.aoVivo && dado.status !== "erro" ? null : atualizar, navMes())),
       backend?.aoVivo && dado.status === "ok" ? h("div", { class: "live" }, h("i"), "Ao vivo: muda sozinho quando alguém salva") : null,
       h("div", { class: "stats" },
         h("div", { class: "stat" }, h("b", {}, String(responderam.length)), h("span", {}, responderam.length === 1 ? "respondeu" : "responderam")),
@@ -1178,6 +1184,161 @@ async function copiarResumo(dias, resp, faltam) {
     const ta = h("textarea", { class: "input", rows: "8", readonly: true, style: "font-size:12px" }); ta.value = texto;
     document.querySelector(".screen").append(ta); ta.focus(); ta.select(); toast("Texto selecionado abaixo. Toque em Copiar.");
   }
+}
+
+/* ===================== IMAGEM DO CALENDÁRIO (PNG) =====================
+   Desenha o mês no estilo da escala impressa da igreja e baixa como PNG. */
+const TITULO_IMG = { edp: "EDP 9:00", cel1: "C. CELEBRAÇÃO 10:15", cel2: "C. CELEBRAÇÃO 18:30", palavra: "CULTO DA PALAVRA", vitoria: "CULTO DA VITÓRIA", sobrenatural: "C. SOBRENATURAL" };
+async function gerarImagem(btn) {
+  const { ano, mes, ym } = mesAtual();
+  const icone = btn.firstChild;
+  btn.disabled = true; btn.replaceChildren(h("span", { class: "spinner" }));
+  try {
+    try { await Promise.all(["400 15px Inter", "600 15px Inter", "700 20px Inter", "800 30px Sora"].map(f => document.fonts.load(f))); } catch (e) {}
+    const blob = await desenharCalendario(ano, mes, cultosDoMes(ano, mes), state.dados[ym]?.respostas || []);
+    await baixarArquivo(blob, `escala-advec-${slug(MESES[mes])}-${ano}.png`);
+  } catch (e) {
+    toast("Não consegui gerar a imagem. Tente de novo.");
+  } finally {
+    btn.disabled = false; btn.replaceChildren(icone);
+  }
+}
+async function baixarArquivo(blob, nome) {
+  if (window.claude && typeof window.claude.use === "function") {
+    const dl = await window.claude.use("downloads").catch(() => null);
+    if (dl) {
+      try { await dl.save({ filename: nome, data: blob }); toast("Imagem pronta!"); }
+      catch (e) { if (e && e.code !== "declined") toast("Não consegui salvar a imagem aqui."); }
+      return;
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = h("a", { href: url, download: nome, style: "display:none" });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  vibrar(20); toast("Imagem baixada: " + nome);
+}
+function carregarImagem(src) { return new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src; }); }
+async function desenharCalendario(ano, mes, dias, resp) {
+  const W = 1600, ESC = 2;
+  const FT = '"Inter", Arial, Helvetica, sans-serif', FD = '"Sora", "Inter", Arial, sans-serif';
+  const C = { faixa: "#2e3796", faixa2: "#232a7a", num: "#1b2a8f", tit: "#9c2b22", txt: "#262a36", vazio: "#8b90a3", grade: "#8f98c8", creme: "#fbf8e3", branco: "#ffffff", rodape: "#5b6178" };
+  const COLS = [400, 200, 200, 200, 200, 200, 200];
+  const X = COLS.reduce((a, w, i) => (a.push(a[i] + w), a), [0]);
+  const porDia = new Map(dias.map(d => [d.d, d]));
+  const primeiro = new Date(ano, mes, 1).getDay(), total = new Date(ano, mes + 1, 0).getDate();
+  const nSem = Math.ceil((primeiro + total) / 7);
+  const ordemNome = (a, b) => (/^dc/i.test(a) === /^dc/i.test(b) ? 0 : /^dc/i.test(a) ? -1 : 1) || semCargo(a).localeCompare(semCargo(b));
+  const disp = id => resp.filter(r => r.cultos.includes(id)).map(r => r.nome).sort(ordemNome);
+  const titulo = c => c.extra ? (c.t.nome + (c.t.hora ? " " + c.t.hora : "")).toUpperCase() : TITULO_IMG[c.tipo] || c.t.nome.toUpperCase();
+
+  const med = document.createElement("canvas").getContext("2d");
+  const fTit = `600 15px ${FT}`, fNome = `400 15px ${FT}`, fVazio = `italic 400 13.5px ${FT}`, fNum = `700 21px ${FT}`;
+  const LT = 20, LN = 19.5, GAP = 11;
+  function quebrar(txt, max1, max) {
+    med.font = fTit;
+    const out = []; let l = "";
+    for (const p of txt.split(/\s+/)) {
+      const t = l ? l + " " + p : p, lim = out.length ? max : max1;
+      if (l && med.measureText(t).width > lim) { out.push(l); l = p; } else l = t;
+    }
+    if (l) out.push(l);
+    return out;
+  }
+  function cortar(txt, max, font) {
+    med.font = font; if (med.measureText(txt).width <= max) return txt;
+    while (txt.length > 1 && med.measureText(txt + "…").width > max) txt = txt.slice(0, -1);
+    return txt + "…";
+  }
+  // monta uma coluna de texto: [{font, cor, txt, x, y}], altura
+  function coluna(cultos, larg, recuo) {
+    const ops = []; let y = 0;
+    cultos.forEach((c, i) => {
+      if (i) y += GAP;
+      quebrar(titulo(c), larg - (y === 0 ? recuo : 0), larg).forEach((l, j) => {
+        ops.push({ font: fTit, cor: C.tit, txt: l, x: y === 0 && j === 0 ? recuo : 0, y }); y += LT;
+      });
+      y += 4;
+      const nomes = disp(c.id);
+      if (!nomes.length) { ops.push({ font: fVazio, cor: C.vazio, txt: "ninguém disponível", x: 0, y }); y += LN; }
+      nomes.forEach(n => { ops.push({ font: fNome, cor: C.txt, txt: cortar(n, larg, fNome), x: 0, y }); y += LN; });
+    });
+    return { ops, alt: y };
+  }
+  // layout de cada célula
+  const celulas = [];
+  for (let d = 1; d <= total; d++) {
+    const pos = primeiro + d - 1, w = Math.floor(pos / 7), col = pos % 7;
+    const dia = porDia.get(d);
+    med.font = fNum; const recuo = med.measureText(String(d)).width + 14;
+    const cel = { d, w, col, colunas: [] };
+    if (dia) {
+      if (col === 0) {
+        const manha = dia.cultos.filter(c => c.tipo === "edp" || c.tipo === "cel1"), resto = dia.cultos.filter(c => !manha.includes(c));
+        if (manha.length && resto.length) {
+          cel.colunas.push({ dx: 10, ...coluna(manha, 184, recuo) }, { dx: 208, ...coluna(resto, 184, 0) });
+        } else cel.colunas.push({ dx: 10, ...coluna(dia.cultos, COLS[0] - 20, recuo) });
+      } else cel.colunas.push({ dx: 8, ...coluna(dia.cultos, COLS[col] - 16, recuo) });
+    }
+    cel.alt = Math.max(0, ...cel.colunas.map(c => c.alt));
+    celulas.push(cel);
+  }
+  const TOPO = 112, CAB = 34, RODAPE = 40, MINL = 132, PADV = 10;
+  const alturas = Array.from({ length: nSem }, (_, w) => Math.max(MINL, ...celulas.filter(c => c.w === w).map(c => c.alt + PADV * 2 + 4)));
+  const Y = alturas.reduce((a, hgt, i) => (a.push(a[i] + hgt), a), [TOPO + CAB]);
+  const H = Y[nSem] + RODAPE;
+
+  const cv = document.createElement("canvas");
+  cv.width = W * ESC; cv.height = H * ESC;
+  const g = cv.getContext("2d"); g.scale(ESC, ESC); g.textBaseline = "top";
+  g.fillStyle = C.branco; g.fillRect(0, 0, W, H);
+
+  // faixa do título
+  const grad = g.createLinearGradient(0, 0, 0, TOPO); grad.addColorStop(0, C.faixa); grad.addColorStop(1, C.faixa2);
+  g.fillStyle = grad; g.fillRect(0, 0, W, TOPO);
+  const logo = await carregarImagem(LOGO);
+  if (logo) {
+    g.save(); g.beginPath(); g.arc(70, TOPO / 2, 40, 0, Math.PI * 2); g.closePath(); g.clip();
+    g.drawImage(logo, 30, TOPO / 2 - 40, 80, 80); g.restore();
+    g.strokeStyle = "#d9b25f"; g.lineWidth = 3; g.beginPath(); g.arc(70, TOPO / 2, 40, 0, Math.PI * 2); g.stroke();
+  }
+  g.fillStyle = "#ffffff"; g.textAlign = "center";
+  g.font = `800 30px ${FD}`; g.fillText("ESCALA DOS OBREIROS PARA OS CULTOS E EVENTOS", W / 2, 18);
+  g.font = `800 26px ${FD}`; g.fillText(`MÊS ${MESES[mes].toUpperCase()} ${ano}`, W / 2, 62);
+
+  // cabeçalho dos dias
+  g.fillStyle = C.faixa; g.fillRect(0, TOPO, W, CAB);
+  g.font = `700 17px ${FT}`; g.fillStyle = "#ffffff"; g.textAlign = "center";
+  ["Domingo", "Segunda-Feira", "Terça-Feira", "Quarta-Feira", "Quinta-Feira", "Sexta-Feira", "Sábado"].forEach((n, i) => g.fillText(n, X[i] + COLS[i] / 2, TOPO + 8));
+  g.textAlign = "left";
+
+  // fundos das colunas (domingo e sábado em creme)
+  for (let w = 0; w < nSem; w++) for (let i = 0; i < 7; i++) {
+    g.fillStyle = i === 0 || i === 6 ? C.creme : C.branco;
+    g.fillRect(X[i], Y[w], COLS[i], alturas[w]);
+  }
+  // conteúdo
+  for (const cel of celulas) {
+    const x0 = X[cel.col], y0 = Y[cel.w];
+    g.font = fNum; g.fillStyle = C.num; g.fillText(String(cel.d), x0 + 8, y0 + PADV - 2);
+    for (const coluna of cel.colunas) for (const op of coluna.ops) {
+      g.font = op.font; g.fillStyle = op.cor; g.fillText(op.txt, x0 + coluna.dx + op.x, y0 + PADV + 2 + op.y);
+    }
+  }
+  // grade
+  g.strokeStyle = C.grade; g.lineWidth = 1;
+  for (let w = 0; w <= nSem; w++) { g.beginPath(); g.moveTo(0, Y[w] + .5); g.lineTo(W, Y[w] + .5); g.stroke(); }
+  for (let i = 1; i < 7; i++) { g.beginPath(); g.moveTo(X[i] + .5, TOPO + CAB); g.lineTo(X[i] + .5, Y[nSem]); g.stroke(); }
+  g.strokeStyle = C.faixa2; g.lineWidth = 2; g.strokeRect(1, 1, W - 2, Y[nSem] - 1);
+
+  // rodapé
+  const agora = new Date();
+  g.font = `500 13px ${FT}`; g.fillStyle = C.rodape;
+  g.fillText("ASSEMBLEIA DE DEUS VITÓRIA EM CRISTO · disponibilidade informada pelos obreiros no app", 16, Y[nSem] + 13);
+  g.textAlign = "right";
+  g.fillText(`Responderam ${resp.length} de ${todosNomes().length} · gerado em ${pad(agora.getDate())}/${pad(agora.getMonth() + 1)}/${agora.getFullYear()} às ${pad(agora.getHours())}:${pad(agora.getMinutes())}`, W - 16, Y[nSem] + 13);
+
+  return await new Promise((ok, falha) => cv.toBlob(b => b ? ok(b) : falha(new Error("png")), "image/png"));
 }
 
 /* ===================== ABA: USUÁRIO ===================== */
