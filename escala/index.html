@@ -464,9 +464,6 @@ const CONFIG = {
     messagingSenderId: "394958677291",
     appId: "1:394958677291:web:2d70ca9a46fed6c25f516e",
   },
-  // Administrador: entra com a senha da igreja. No Firebase, a senha é a do usuário abaixo
-  // (Authentication > Usuários). Só ele pode tirar cultos ou criar eventos.
-  adminEmail: "admin@escala-advec.app",
   obreiros: [
     "Dc. Bezerra", "Dc. David", "Dc. Francisco", "Dc. Josival", "Dc. Maicon", "Dc. Victor",
     "Ob. Alex", "Ob. Augusto", "Ob. Edmilson", "Ob. Gerson", "Ob. Matheus", "Ob. Rofferson",
@@ -486,7 +483,7 @@ const TIPOS = {
   evento:       { nome: "Evento especial",        curto: "Evento",        hora: "",      cor: "#ff9fb2", chip: "Eventos especiais" },
 };
 const ORDEM = ["palavra", "vitoria", "edp", "cel1", "cel2", "sobrenatural", "evento"];
-const SENHA_HASH = "3293a527dc537507d5e7f06fd7b47834441a9dc8d55d68c5e1dd10e179f0c5de"; // usada só na prévia/sem Firebase
+const SENHA_HASH = ""; // só a prévia do Claude usa; na versão publicada fica vazio (quem confere a senha é o Firebase)
 const DOW = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const DOW_LONG = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
@@ -558,13 +555,14 @@ function juntar(cb) {
     eventos(x) { v.eventos = x || {}; emitir(); },
   };
 }
+function novoToken() { const a = new Uint8Array(12); crypto.getRandomValues(a); return [...a].map(x => x.toString(36).padStart(2, "0")).join("").slice(0, 20); }
 async function sha256(txt) {
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(txt));
   return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join("");
 }
 /* Admin sem Firebase (prévia): confere a senha pelo hash e lembra neste aparelho. */
 const adminSimples = {
-  async entrar(senha) { if ((await sha256(senha)) !== SENHA_HASH) throw Object.assign(new Error("senha"), { code: "senha" }); local.set("advec:admin", true); return true; },
+  async entrar(senha) { if (!SENHA_HASH) throw Object.assign(new Error("indisponivel"), { code: "indisponivel" }); if ((await sha256(senha)) !== SENHA_HASH) throw Object.assign(new Error("senha"), { code: "senha" }); local.set("advec:admin", true); return true; },
   async sair() { local.del("advec:admin"); },
   async restaurar() { return !!local.get("advec:admin"); },
 };
@@ -629,26 +627,23 @@ async function backendFirebase(cfg) {
     },
     salvar: r => fs.doc(`respostas/${r.mes}_${slug(r.nome)}`).set(r),
     addNome: nome => fs.doc(`obreiros/${slug(nome)}`).set({ nome }),
-    salvarEventos: (ym, aj) => fs.doc(`eventos/${ym}`).set(aj),
-    // Administrador = login do Firebase Authentication (e-mail fixo + senha da igreja).
+    // Mudanças do administrador vão junto com uma "autorização" que leva a senha.
+    // Quem confere a senha é a regra do Firestore; ninguém consegue ler as autorizações.
+    async salvarEventos(ym, aj) {
+      const senha = local.get("advec:admin-senha") || "";
+      const token = novoToken(), lote = fs.batch();
+      lote.set(fs.doc(`autorizacoes/${token}`), { senha, quando: new Date().toISOString() });
+      lote.set(fs.doc(`eventos/${ym}`), { ...aj, token });
+      await lote.commit();
+    },
     admin: {
-      async carregar() {
-        if (!firebase.auth) await carregarScript(base + "firebase-auth-compat.js");
-        const auth = firebase.auth();
-        await new Promise(ok => { const u = auth.onAuthStateChanged(() => { u(); ok(); }); });
-        return auth;
-      },
       async entrar(senha) {
-        const auth = await this.carregar();
-        await auth.signInWithEmailAndPassword(CONFIG.adminEmail, senha);
-        local.set("advec:admin", true); return true;
+        try { await comTempo(fs.doc(`autorizacoes/${novoToken()}`).set({ senha, quando: new Date().toISOString() }), 15000); }
+        catch (e) { throw e && e.code === "permission-denied" ? Object.assign(new Error("senha"), { code: "senha" }) : e; }
+        local.set("advec:admin-senha", senha); return true;
       },
-      async sair() { local.del("advec:admin"); if (firebase.auth) await firebase.auth().signOut(); },
-      async restaurar() {
-        if (!local.get("advec:admin")) return false;
-        const auth = await this.carregar();
-        return !!auth.currentUser && auth.currentUser.email === CONFIG.adminEmail;
-      },
+      async sair() { local.del("advec:admin-senha"); },
+      async restaurar() { return !!local.get("advec:admin-senha"); },
     },
   };
 }
@@ -1388,9 +1383,8 @@ function painelAdmin() {
       state.tab = "admin"; render();
     } catch (err) {
       const c = err && err.code || "";
-      msg.textContent = c === "senha" || c === "auth/invalid-credential" || c === "auth/wrong-password" || c === "auth/invalid-login-credentials" || c === "auth/user-not-found" ? "Senha incorreta."
-        : c === "auth/operation-not-allowed" || c === "auth/configuration-not-found" ? "O login do administrador ainda não foi ativado no Firebase."
-        : c === "auth/too-many-requests" ? "Muitas tentativas. Espere alguns minutos e tente de novo."
+      msg.textContent = c === "senha" ? "Senha incorreta."
+        : c === "indisponivel" ? "Sem conexão com o banco da igreja. Confira a internet e tente de novo."
         : "Não consegui conferir a senha. Confira a internet e tente de novo.";
       btn.disabled = false; inp.select();
     }
@@ -1494,7 +1488,8 @@ async function gravarAjustes(ym, aj, msg) {
     if (e && e.code === "tempo" && backend?.modo === "firebase") { toast("Sem internet: a mudança será enviada quando a conexão voltar."); return; }
     state.dados[ym].eventos = antes || {};
     telaAdmin(true); window.scrollTo({ top: y });
-    toast(e && e.code === "permission-denied" ? "O Firebase recusou: entre de novo como administrador." : "Não foi possível salvar. Tente de novo.");
+    if (e && e.code === "permission-denied") { await backend.admin.sair().catch(() => {}); state.admin = false; state.tab = "usuario"; render(); toast("A senha do administrador mudou. Entre de novo na aba Usuário."); return; }
+    toast("Não foi possível salvar. Tente de novo.");
   }
 }
 function trocarUsuario() {
