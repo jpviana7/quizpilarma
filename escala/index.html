@@ -277,8 +277,19 @@ label.small { font-size: 13px; color: var(--muted); }
 .pill.zero { color: var(--dim); }
 .pill.zero i { background: transparent; box-shadow: inset 0 0 0 1.5px var(--c); }
 .pill.me i { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--gold-hi); }
+.wk-scroll { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; margin-inline: -10px; padding-inline: 10px; -webkit-overflow-scrolling: touch; }
+.wk-scroll::-webkit-scrollbar { display: none; }
+.wk-scroll.sobra { mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); }
+.wk { display: grid; gap: 5px; min-width: min-content; padding-right: 18px; }
+.wk .wd.fino { letter-spacing: 0; }
+.mcell.fino { padding-inline: 3px; align-items: center; }
+.wk-dica { display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-size: 11.5px; color: var(--gold); margin: -2px 2px 8px; transition: opacity .3s; }
+.wk-dica svg { width: 13px; height: 13px; animation: nudge 1.4s ease-in-out infinite; }
+.wk-dica.fim { opacity: .35; }
+.wk-dica.fim svg { animation: none; }
+@keyframes nudge { 50% { transform: translateX(4px); } }
 .mcal { display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 6px; }
-.mcal .wd { text-align: center; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); padding-bottom: 4px; }
+.wk .wd, .mcal .wd { text-align: center; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); padding-bottom: 4px; }
 .mcal .wd.sun { color: var(--gold); }
 .mcell {
   min-width: 0; min-height: 74px; padding: 6px 5px 7px; border-radius: 12px; display: flex; flex-direction: column; align-items: stretch; gap: 6px;
@@ -292,16 +303,16 @@ label.small { font-size: 13px; color: var(--muted); }
 .mcell .n { font: 800 14px/1 var(--font-display); font-variant-numeric: tabular-nums; padding-left: 2px; }
 .mcell.dom .n { color: var(--gold-hi); }
 .mcell.vazio { min-height: 0; padding: 0; }
-.mcell.sem { border: 1px dashed var(--line-soft); color: var(--dim); }
+.mcell.sem { border: 1px solid transparent; color: var(--dim); min-height: 44px; }
 .mcell.has { background: rgba(19,48,112,.78); border-color: var(--line-soft); cursor: pointer; transition: border-color .2s, transform .2s var(--ease), background .2s; }
 .mcell.has:active { transform: scale(.97); }
 .mcell.sel { border-color: var(--gold); background: rgba(217,178,95,.13); box-shadow: 0 0 0 1px var(--gold) inset, 0 10px 24px -12px rgba(217,178,95,.8); }
 .mcell.today .n { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--gold); }
 .mc { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; padding-left: 6px; border-left: 2px solid var(--c); }
-.mh { font: 700 10.5px/1.1 var(--font-body); letter-spacing: .02em; color: var(--c); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.mh { font: 700 10.5px/1.2 var(--font-body); letter-spacing: .02em; color: var(--c); font-variant-numeric: tabular-nums; max-width: 100%; overflow-wrap: anywhere; }
 .cn {
   max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  font: 600 11.5px/1.3 var(--font-body); padding: 2px 7px; border-radius: 7px;
+  font: 600 11.5px/1.3 var(--font-body); padding: 2px 6px; border-radius: 7px;
   background: rgba(238,242,251,.09); color: var(--ink);
   animation: rise .35s var(--ease) both; animation-delay: calc(var(--i, 0) * 14ms + 120ms);
 }
@@ -680,7 +691,7 @@ function todosNomes() {
 function minhaResposta(ym) { return (state.dados[ym]?.respostas || []).find(r => mesmoNome(r.nome, state.nome)); }
 
 let assinatura = { ym: null, parar: null };
-let calNomesVistos = new Set();
+let calNomesVistos = new Set(), calRolagemX = 0, calPosRender = null;
 function carregarMes(ym, { forcar = false } = {}) {
   if (assinatura.ym === ym && !forcar) return;
   if (assinatura.parar) assinatura.parar();
@@ -784,7 +795,7 @@ function navMes() {
 }
 function trocarMes(delta) {
   state.offset = Math.max(OFF_MIN, Math.min(OFF_MAX, state.offset + delta));
-  state.diaSel = null;
+  state.diaSel = null; calRolagemX = 0;
   lerRascunho(); render(); carregarMes(mesAtual().ym);
 }
 
@@ -1064,70 +1075,48 @@ function telaCalendario(calmo = false) {
 
   let corpo;
   if (state.calView === "cal") {
-    // Só as colunas que têm culto: Domingo, Segunda e Quarta. A sexta do Sobrenatural vira uma faixa larga na semana dela.
-    const COLS = [0, 1, 3, 5];
+    // Calendário da semana completa (Dom a Sáb). Colunas com culto no mês ficam largas para caber os nomes.
     const primeiro = new Date(ano, mes, 1).getDay(), total = new Date(ano, mes + 1, 0).getDate();
-    const semanas = [];
-    for (let d = 1; d <= total; d++) {
-      const dow = (primeiro + d - 1) % 7, w = Math.floor((primeiro + d - 1) / 7);
-      (semanas[w] ||= {})[dow] = d;
-    }
+    const comCulto = new Set(dias.map(d => d.dow));
+    const colunas = [0, 1, 2, 3, 4, 5, 6].map(w => comCulto.has(w) ? "minmax(104px, 1fr)" : "minmax(34px, .4fr)").join(" ");
     const vistosAntes = calNomesVistos; calNomesVistos = new Set();
     const MAX = 6;
-    const cells = ["Domingo", "Segunda", "Quarta"].map((w, i) => h("div", { class: "wd" + (i === 0 ? " sun" : "") }, w));
-    let i = 0;
-    for (const sem of semanas.filter(Boolean)) {
-      for (const col of COLS) {
-        const d = sem[col]; i++;
-        if (col === 5) continue; // sextas e outros dias entram como faixa larga abaixo
-        if (!d) { cells.push(h("div", { class: "mcell vazio", "aria-hidden": "true" })); continue; }
-        const dia = porDia.get(d);
-        const isHoje = ano === hoje.getFullYear() && mes === hoje.getMonth() && d === hoje.getDate();
-        if (!dia) { cells.push(h("div", { class: "mcell sem" + (isHoje ? " today" : ""), style: `--i:${i}` }, h("span", { class: "n" }, pad(d)), h("span", { class: "nada" }, "sem culto"))); continue; }
-        cells.push(h("button", { class: "mcell has" + (d === state.diaSel ? " sel" : "") + (isHoje ? " today" : "") + (dia.dow === 0 ? " dom" : "") + (dia.dow === 5 ? " faixa" : ""), style: `--i:${i}`,
-            "aria-label": `${DOW_LONG[dia.dow]}, ${d}: ` + dia.cultos.map(c => `${c.t.nome}: ${disp(c.id).map(r => r.nome).join(", ") || "ninguém"}`).join("; "),
-            "aria-pressed": String(d === state.diaSel),
-            onclick: () => { state.diaSel = d; vibrar(8); const y = window.scrollY; telaCalendario(true); window.scrollTo({ top: y }); document.getElementById("detalhe")?.scrollIntoView({ behavior: "smooth", block: "nearest" }); } },
-          h("span", { class: "n" }, pad(d)),
-          dia.cultos.map(c => {
-            const t = c.t, quem = disp(c.id).slice().sort((a, b) => mesmoNome(a.nome, state.nome) ? -1 : mesmoNome(b.nome, state.nome) ? 1 : a.nome.localeCompare(b.nome));
-            const nomes = quem.slice(0, MAX).map(r => {
-              const k = c.id + "|" + slug(r.nome); calNomesVistos.add(k);
-              const eu = mesmoNome(r.nome, state.nome);
-              return h("span", { class: "cn" + (eu ? " me" : "") + (calmo && vistosAntes.size && !vistosAntes.has(k) ? " novo" : ""), title: r.nome }, eu ? "Você" : primeiroNome(r.nome));
-            });
-            quem.slice(MAX).forEach(r => calNomesVistos.add(c.id + "|" + slug(r.nome)));
-            return h("span", { class: "mc", style: `--c:${t.cor}` },
-              h("span", { class: "mh" }, c.extra ? (t.hora ? `${t.hora} ${t.nome}` : t.nome) : t.hora || t.curto),
-              h("span", { class: "nms" }, nomes.length ? nomes : h("span", { class: "nada" }, "ninguém")),
-              quem.length > MAX ? h("span", { class: "mais" }, `+${quem.length - MAX}`) : null);
-          })));
-      }
-      // Faixas largas: dias com culto fora de domingo, segunda e quarta (sexta do Sobrenatural, eventos).
-      const inicioSem = Math.min(...Object.values(sem)), dIni = inicioSem - ((primeiro + inicioSem - 1) % 7);
-      for (let d = Math.max(1, dIni); d <= Math.min(total, dIni + 6); d++) {
-        const dia = porDia.get(d); if (!dia || [0, 1, 3].includes(dia.dow)) continue;
-        const isHoje = ano === hoje.getFullYear() && mes === hoje.getMonth() && d === hoje.getDate();
-        i++;
-        cells.push(h("button", { class: "mcell has faixa" + (d === state.diaSel ? " sel" : "") + (isHoje ? " today" : ""), style: `--i:${i}`,
-            "aria-label": `${DOW_LONG[dia.dow]}, ${d}: ` + dia.cultos.map(c => `${c.t.nome}: ${disp(c.id).map(r => r.nome).join(", ") || "ninguém"}`).join("; "),
-            "aria-pressed": String(d === state.diaSel),
-            onclick: () => { state.diaSel = d; vibrar(8); const y = window.scrollY; telaCalendario(true); window.scrollTo({ top: y }); document.getElementById("detalhe")?.scrollIntoView({ behavior: "smooth", block: "nearest" }); } },
-          h("span", { class: "n" }, `${DOW_LONG[dia.dow].replace("-feira", "")} ${pad(d)}`),
-          h("span", { class: "faixa-cultos" }, dia.cultos.map(c => {
-            const quem = disp(c.id).slice().sort((a, b) => mesmoNome(a.nome, state.nome) ? -1 : mesmoNome(b.nome, state.nome) ? 1 : a.nome.localeCompare(b.nome));
-            const nomes = quem.map(r => {
-              const k = c.id + "|" + slug(r.nome); const novo = calmo && vistosAntes.size && !vistosAntes.has(k); calNomesVistos.add(k);
-              const eu = mesmoNome(r.nome, state.nome);
-              return h("span", { class: "cn" + (eu ? " me" : "") + (novo ? " novo" : ""), title: r.nome }, eu ? "Você" : primeiroNome(r.nome));
-            });
-            return h("span", { class: "mc", style: `--c:${c.t.cor}` }, h("span", { class: "mh" }, c.t.hora ? `${c.t.hora} · ${c.t.nome}` : c.t.nome),
-              h("span", { class: "nms" }, nomes.length ? nomes : h("span", { class: "nada" }, "ninguém")));
-          }))));
-      }
+    const cells = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((w, i) => h("div", { class: "wd" + (i === 0 ? " sun" : "") + (comCulto.has(i) ? "" : " fino") }, comCulto.has(i) ? w : w[0]));
+    for (let i = 0; i < primeiro; i++) cells.push(h("div", { class: "mcell vazio", "aria-hidden": "true" }));
+    for (let d = 1; d <= total; d++) {
+      const dia = porDia.get(d), dow = (primeiro + d - 1) % 7;
+      const isHoje = ano === hoje.getFullYear() && mes === hoje.getMonth() && d === hoje.getDate();
+      if (!dia) { cells.push(h("div", { class: "mcell sem" + (isHoje ? " today" : "") + (comCulto.has(dow) ? "" : " fino"), style: `--i:${d}` }, h("span", { class: "n" }, String(d)))); continue; }
+      cells.push(h("button", { class: "mcell has" + (d === state.diaSel ? " sel" : "") + (isHoje ? " today" : "") + (dia.dow === 0 ? " dom" : ""), style: `--i:${d}`,
+          "aria-label": `${DOW_LONG[dia.dow]}, ${d}: ` + dia.cultos.map(c => `${c.t.nome}: ${disp(c.id).map(r => r.nome).join(", ") || "ninguém"}`).join("; "),
+          "aria-pressed": String(d === state.diaSel),
+          onclick: () => { state.diaSel = d; vibrar(8); const y = window.scrollY; telaCalendario(true); window.scrollTo({ top: y }); document.getElementById("detalhe")?.scrollIntoView({ behavior: "smooth", block: "nearest" }); } },
+        h("span", { class: "n" }, String(d)),
+        dia.cultos.map(c => {
+          const t = c.t, quem = disp(c.id).slice().sort((a, b) => mesmoNome(a.nome, state.nome) ? -1 : mesmoNome(b.nome, state.nome) ? 1 : a.nome.localeCompare(b.nome));
+          const nomes = quem.slice(0, MAX).map(r => {
+            const k = c.id + "|" + slug(r.nome); const novo = calmo && vistosAntes.size && !vistosAntes.has(k); calNomesVistos.add(k);
+            const eu = mesmoNome(r.nome, state.nome);
+            return h("span", { class: "cn" + (eu ? " me" : "") + (novo ? " novo" : ""), title: r.nome }, eu ? "Você" : primeiroNome(r.nome));
+          });
+          quem.slice(MAX).forEach(r => calNomesVistos.add(c.id + "|" + slug(r.nome)));
+          return h("span", { class: "mc", style: `--c:${t.cor}` },
+            h("span", { class: "mh" }, c.extra ? (t.hora ? `${t.hora} ${t.nome}` : t.nome) : t.hora || t.curto),
+            h("span", { class: "nms" }, nomes.length ? nomes : h("span", { class: "nada" }, "ninguém")),
+            quem.length > MAX ? h("span", { class: "mais" }, `+${quem.length - MAX}`) : null);
+        })));
     }
     const tiposMes = ORDEM.filter(t => dias.some(d => d.cultos.some(c => c.tipo === t)));
-    const grade = h("div", { class: "cal-wrap" }, h("div", { class: "mcal" }, cells),
+    const dica = h("div", { class: "wk-dica" }, "Arraste para o lado para ver a semana toda ", svg(ICON.right));
+    const rolagem = h("div", { class: "wk-scroll" }, h("div", { class: "wk", style: `grid-template-columns:${colunas}` }, cells));
+    rolagem.addEventListener("scroll", () => { calRolagemX = rolagem.scrollLeft; dica.classList.toggle("fim", rolagem.scrollLeft + rolagem.clientWidth >= rolagem.scrollWidth - 4); }, { passive: true });
+    calPosRender = () => {
+      rolagem.scrollLeft = calRolagemX;
+      const sobra = rolagem.scrollWidth > rolagem.clientWidth + 4;
+      dica.hidden = !sobra; rolagem.classList.toggle("sobra", sobra);
+      dica.classList.toggle("fim", rolagem.scrollLeft + rolagem.clientWidth >= rolagem.scrollWidth - 4);
+    };
+    const grade = h("div", { class: "cal-wrap" }, dica, rolagem,
       h("div", { class: "legend" }, tiposMes.map(t => h("span", { style: `--c:${TIPOS[t].cor}` }, h("i"), TIPOS[t].hora ? `${TIPOS[t].hora} ${TIPOS[t].curto}` : t === "evento" ? "Eventos especiais" : TIPOS[t].nome)),
         h("span", {}, "Toque no dia para ver todos os detalhes")));
     const dia = porDia.get(state.diaSel);
@@ -1153,6 +1142,7 @@ function telaCalendario(calmo = false) {
   const copiar = h("button", { class: "btn btn-ghost btn-block", onclick: () => copiarResumo(dias, resp, faltam) }, svg(ICON.copy), "Copiar resumo para a reunião");
 
   app.replaceChildren(h("section", { class: "screen" + (calmo ? " calm" : "") }, topbar("Calendário geral"), resumo, avisos, segBox, corpo, painel, copiar));
+  if (state.calView === "cal" && calPosRender) requestAnimationFrame(calPosRender);
 }
 function pessoa(nome, extra = "", contador) {
   const eu = mesmoNome(nome, state.nome);
