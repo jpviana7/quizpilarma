@@ -393,6 +393,11 @@ label.small { font-size: 13px; color: var(--muted); }
 .sw[aria-checked="true"] i { transform: translateX(20px); background: #fff8e1; }
 .img-btn { color: var(--gold-hi); border-color: rgba(217,178,95,.45); background: rgba(217,178,95,.12); }
 .img-btn .spinner { width: 15px; height: 15px; }
+.adm-acoes { display: flex; align-items: center; gap: 8px; }
+.adm-acoes .icon-btn { width: 34px; height: 34px; }
+.adm-edit { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: var(--r-md); border: 1px solid var(--gold); border-left: 4px solid var(--c); background: rgba(217,178,95,.08); animation: rise .3s var(--ease) both; }
+.adm-edit .add-ev { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+.adm-edit-btns { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 .icon-btn.danger { color: #ffb3b3; border-color: rgba(255,140,140,.3); }
 .btn.warn { border-color: var(--warn); color: var(--warn); }
 
@@ -517,9 +522,18 @@ function ajustesDo(ym) {
   return { removidos: Array.isArray(a.removidos) ? a.removidos.map(String) : [], extras: Array.isArray(a.extras) ? a.extras.filter(e => e && e.id && e.data && e.nome) : [] };
 }
 const minutos = h => { const m = /^(\d{1,2}):(\d{2})$/.exec(h || ""); return m ? +m[1] * 60 + +m[2] : 9999; };
+const horaBonita = h => String(h || "").slice(0, 5).replace(/^0(\d):/, "$1:");
+const horaCampo = h => { const m = /^(\d{1,2}):(\d{2})$/.exec(h || ""); return m ? `${m[1].padStart(2, "0")}:${m[2]}` : ""; };
+/* Culto habitual com nome/horário trocados pelo administrador naquele dia. */
+function aplicarEdicao(c, ed) {
+  if (!ed) return c;
+  const nome = String(ed.nome).slice(0, 40), hora = horaBonita(ed.hora);
+  return { ...c, editado: true, t: { ...c.t, nome, curto: nome, hora } };
+}
+function edicoesDo(aj) { return new Map(aj.extras.filter(e => e.edita).map(e => [String(e.id), e])); }
 function eventoComoCulto(e, ano, mes) {
   const d = +String(e.data).slice(8, 10), dow = new Date(ano, mes, d).getDay();
-  const nome = String(e.nome).slice(0, 40), hora = String(e.hora || "").slice(0, 5);
+  const nome = String(e.nome).slice(0, 40), hora = horaBonita(e.hora);
   return { id: String(e.id), tipo: "evento", d, dow, extra: true, t: { nome, curto: nome, hora, cor: TIPOS.evento.cor, chip: TIPOS.evento.chip } };
 }
 /* Cultos que valem no mês: os habituais, menos os retirados, mais os eventos criados pelo administrador. */
@@ -527,8 +541,10 @@ function cultosDoMes(ano, mes) {
   const ym = `${ano}-${pad(mes + 1)}`, total = new Date(ano, mes + 1, 0).getDate();
   const aj = ajustesDo(ym), fora = new Set(aj.removidos);
   const porDia = new Map();
-  for (const dia of cultosPadrao(ano, mes)) porDia.set(dia.d, dia.cultos.filter(c => !fora.has(c.id)));
+  const eds = edicoesDo(aj);
+  for (const dia of cultosPadrao(ano, mes)) porDia.set(dia.d, dia.cultos.filter(c => !fora.has(c.id)).map(c => aplicarEdicao(c, eds.get(c.id))));
   for (const e of aj.extras) {
+    if (e.edita) continue;
     const d = +String(e.data).slice(8, 10);
     if (!String(e.data).startsWith(ym + "-") || !(d >= 1 && d <= total)) continue;
     if (!porDia.has(d)) porDia.set(d, []);
@@ -762,6 +778,7 @@ const ICON = {
   info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>',
   shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>',
   cal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4"/></svg>',
+  lapis: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>',
   trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>',
   img: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>',
   check: '<svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="13"/><path d="M9 15.5l4 4 8-8.5"/></svg>',
@@ -800,7 +817,7 @@ function navMes() {
 }
 function trocarMes(delta) {
   state.offset = Math.max(OFF_MIN, Math.min(OFF_MAX, state.offset + delta));
-  state.diaSel = null; calRolagemX = 0;
+  state.diaSel = null; calRolagemX = 0; editandoId = null;
   lerRascunho(); render(); carregarMes(mesAtual().ym);
 }
 
@@ -829,8 +846,9 @@ function aoMudarDados(ym, eventosMudaram = false) {
   const y = window.scrollY;
   if (state.tab === "agenda") {
     const { ano, mes } = mesAtual();
-    const ids = cultosDoMes(ano, mes).flatMap(d => d.cultos.map(c => c.id)).join();
-    if (ui.todos && ids !== ui.todos.map(c => c.id).join()) {
+    const assinatura = c => `${c.id}|${c.t.nome}|${c.t.hora}`;
+    const ids = cultosDoMes(ano, mes).flatMap(d => d.cultos.map(assinatura)).join();
+    if (ui.todos && ids !== ui.todos.map(assinatura).join()) {
       telaAgenda(true); window.scrollTo({ top: y });
       if (eventosMudaram) toast("O administrador atualizou os cultos do mês");
     } else sincronizarAgenda();
@@ -1108,7 +1126,7 @@ function telaCalendario(calmo = false) {
           });
           quem.slice(MAX).forEach(r => calNomesVistos.add(c.id + "|" + slug(r.nome)));
           return h("span", { class: "mc", style: `--c:${t.cor}` },
-            h("span", { class: "mh" }, c.extra ? (t.hora ? `${t.hora} ${t.nome}` : t.nome) : t.hora || t.curto),
+            h("span", { class: "mh" }, c.extra || c.editado ? (t.hora ? `${t.hora} ${t.nome}` : t.nome) : t.hora || t.curto),
             h("span", { class: "nms" }, nomes.length ? nomes : h("span", { class: "nada" }, "ninguém")),
             quem.length > MAX ? h("span", { class: "mais" }, `+${quem.length - MAX}`) : null);
         })));
@@ -1231,7 +1249,7 @@ async function desenharCalendario(ano, mes, dias, resp) {
   const nSem = Math.ceil((primeiro + total) / 7);
   const ordemNome = (a, b) => (/^dc/i.test(a) === /^dc/i.test(b) ? 0 : /^dc/i.test(a) ? -1 : 1) || semCargo(a).localeCompare(semCargo(b));
   const disp = id => resp.filter(r => r.cultos.includes(id)).map(r => r.nome).sort(ordemNome);
-  const titulo = c => c.extra ? (c.t.nome + (c.t.hora ? " " + c.t.hora : "")).toUpperCase() : TITULO_IMG[c.tipo] || c.t.nome.toUpperCase();
+  const titulo = c => c.extra || c.editado ? (c.t.nome + (c.t.hora ? " " + c.t.hora : "")).toUpperCase() : TITULO_IMG[c.tipo] || c.t.nome.toUpperCase();
 
   const med = document.createElement("canvas").getContext("2d");
   const fTit = `600 15px ${FT}`, fNome = `400 15px ${FT}`, fVazio = `italic 400 13.5px ${FT}`, fNum = `700 21px ${FT}`;
@@ -1402,7 +1420,39 @@ function painelAdmin() {
 }
 
 /* ===================== ADMINISTRADOR: CULTOS E EVENTOS ===================== */
-let confirmarRestaurar = 0;
+let confirmarRestaurar = 0, editandoId = null;
+/* Editor de nome e horário de um culto (habitual ou evento), só para o administrador. */
+function editorCulto({ c, padrao, e, original, d, ym, aj }) {
+  const nome = h("input", { class: "input", id: "ed-nome", maxlength: "40", value: c.t.nome, "aria-label": "Nome do culto" });
+  const hora = h("input", { class: "input", id: "ed-hora", type: "time", value: horaCampo(c.t.hora), "aria-label": "Horário" });
+  const fechar = () => { editandoId = null; const y = window.scrollY; telaAdmin(true); window.scrollTo({ top: y }); };
+  const salvar = ev => {
+    ev.preventDefault();
+    const n = nome.value.trim().replace(/\s+/g, " ");
+    if (!n) { nome.focus(); toast("Digite o nome do culto."); return; }
+    const hr = hora.value || "";
+    let extras;
+    if (padrao) {
+      extras = aj.extras.filter(x => !(x.edita && x.id === c.id));
+      const igual = n === original.t.nome && horaCampo(hr) === horaCampo(original.t.hora);
+      if (!igual) extras.push({ id: c.id, data: `${ym}-${pad(d)}`, nome: n, hora: hr, edita: true });
+    } else extras = aj.extras.map(x => x.id === e.id ? { ...x, nome: n, hora: hr } : x);
+    editandoId = null;
+    gravarAjustes(ym, { ...aj, extras }, `Nome salvo: ${n}`);
+  };
+  const voltarOriginal = padrao && c.editado ? h("button", { class: "btn btn-ghost btn-sm", type: "button", onclick: () => {
+    editandoId = null;
+    gravarAjustes(ym, { ...aj, extras: aj.extras.filter(x => !(x.edita && x.id === c.id)) }, `Voltou para ${original.t.nome}`);
+  } }, "Voltar ao nome original") : null;
+  return h("form", { class: "adm-edit", style: `--c:${c.t.cor}`, onsubmit: salvar,
+      onkeydown: ev => { if (ev.key === "Escape") fechar(); } },
+    h("p", { class: "section-label" }, padrao ? `Editar culto · original: ${original.t.nome}${original.t.hora ? " " + original.t.hora : ""}` : "Editar evento"),
+    h("div", { class: "add-ev" }, nome, hora),
+    h("div", { class: "adm-edit-btns" },
+      h("button", { class: "btn btn-ghost btn-sm", type: "button", onclick: fechar }, "Cancelar"),
+      voltarOriginal,
+      h("button", { class: "btn btn-gold btn-sm", type: "submit" }, svg(ICON.save), "Salvar")));
+}
 function telaAdmin(calmo = false) {
   const { ano, mes, ym } = mesAtual();
   const total = new Date(ano, mes + 1, 0).getDate();
@@ -1414,8 +1464,10 @@ function telaAdmin(calmo = false) {
 
   // junta habituais (inclusive retirados) e eventos, por dia
   const dias = new Map();
-  for (const d of padrao) dias.set(d.d, d.cultos.map(c => ({ c, padrao: true })));
+  const eds = edicoesDo(aj);
+  for (const d of padrao) dias.set(d.d, d.cultos.map(c => ({ c: aplicarEdicao(c, eds.get(c.id)), padrao: true, original: c })));
   for (const e of aj.extras) {
+    if (e.edita) continue;
     const d = +String(e.data).slice(8, 10); if (!String(e.data).startsWith(ym + "-")) continue;
     if (!dias.has(d)) dias.set(d, []);
     dias.get(d).push({ c: eventoComoCulto(e, ano, mes), padrao: false, e });
@@ -1445,14 +1497,18 @@ function telaAdmin(calmo = false) {
     const dow = new Date(ano, mes, d).getDay();
     return h("div", { class: "adm-day", style: `--i:${Math.min(i, 12)}` },
       h("h4", {}, `${DOW_LONG[dow]}, ${pad(d)}/${pad(mes + 1)}`),
-      itens.map(({ c, padrao, e }) => {
+      itens.map(({ c, padrao, e, original }) => {
         const on = padrao ? !fora.has(c.id) : true, n = marcaram(c.id);
+        if (editandoId === c.id) return editorCulto({ c, padrao, e, original, d, ym, aj });
         return h("div", { class: "adm-row" + (on ? "" : " off"), style: `--c:${c.t.cor}` },
           h("span", { class: "stripe" }),
           h("div", { class: "t" }, h("b", {}, c.t.nome), h("small", {},
             c.t.hora ? h("em", {}, c.t.hora) : null,
-            padrao ? (on ? "Habitual" : "Retirado deste mês") : "Evento especial",
+            padrao ? (!on ? "Retirado deste mês" : c.editado ? `Nome alterado (era ${original.t.nome})` : "Habitual") : "Evento especial",
             n ? ` · ${n} ${n === 1 ? "marcou" : "marcaram"}` : "")),
+          h("div", { class: "adm-acoes" },
+            h("button", { class: "icon-btn", "aria-label": `Editar nome de ${c.t.nome} em ${pad(d)}/${pad(mes + 1)}`, title: "Editar nome",
+              onclick: () => { editandoId = c.id; const y = window.scrollY; telaAdmin(true); window.scrollTo({ top: y }); document.getElementById("ed-nome")?.focus({ preventScroll: true }); } }, svg(ICON.lapis)),
           padrao
             ? h("button", { class: "sw", role: "switch", "aria-checked": String(on), "aria-label": `${c.t.nome} em ${pad(d)}/${pad(mes + 1)}`,
                 onclick: () => {
@@ -1460,7 +1516,7 @@ function telaAdmin(calmo = false) {
                   gravarAjustes(ym, { ...aj, removidos: [...rem] }, on ? `${c.t.nome} do dia ${pad(d)} retirado` : `${c.t.nome} do dia ${pad(d)} voltou`);
                 } }, h("i"))
             : h("button", { class: "icon-btn danger", "aria-label": `Excluir ${c.t.nome}`,
-                onclick: () => gravarAjustes(ym, { ...aj, extras: aj.extras.filter(x => x.id !== e.id) }, `Evento "${c.t.nome}" excluído`) }, svg(ICON.trash)));
+                onclick: () => gravarAjustes(ym, { ...aj, extras: aj.extras.filter(x => x.id !== e.id) }, `Evento "${c.t.nome}" excluído`) }, svg(ICON.trash))));
       }));
   }));
 
@@ -1483,7 +1539,7 @@ function telaAdmin(calmo = false) {
 }
 async function gravarAjustes(ym, aj, msg) {
   const antes = state.dados[ym]?.eventos;
-  const limpo = { removidos: [...new Set(aj.removidos)].slice(0, 100), extras: aj.extras.slice(0, 40).map(e => ({ id: e.id, data: e.data, nome: e.nome, hora: e.hora || "" })), atualizado: new Date().toISOString() };
+  const limpo = { removidos: [...new Set(aj.removidos)].slice(0, 100), extras: aj.extras.slice(0, 40).map(e => ({ id: e.id, data: e.data, nome: e.nome, hora: e.hora || "", ...(e.edita ? { edita: true } : {}) })), atualizado: new Date().toISOString() };
   (state.dados[ym] ||= { status: "ok", respostas: [] }).eventos = limpo;
   const y = window.scrollY; telaAdmin(true); window.scrollTo({ top: y });
   try {
